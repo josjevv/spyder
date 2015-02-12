@@ -36,7 +36,9 @@ On system upstart spyder must loop through all associations and generate an arra
 
 * Every Oplog entry should be matched, if the namespace is in the whitelist computed in the previous step. If not, Spyder should move on.
 
-* If the entry is worthy of a change, create separate subpackages for each plugin. Each plugin must implement the Listener interface which has two bound struct methods
+* If the entry is worthy of a change, add it to the listener's unbufferred channel. We will use Procuder/Sink/Dispatcher pattern to invoke the desired Listener.
+
+* Create separate subpackages for each plugin. Each plugin must implement the Listener interface which has two bound struct methods
 
 ```
 type Listener interface {
