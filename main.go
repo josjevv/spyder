@@ -4,31 +4,38 @@ import "labix.org/v2/mgo"
 import "github.com/rwynn/gtm"
 import "fmt"
 
-func getFilter(op *gtm.Op) bool {
-  return  op.Operation == "u" &&
-          op.GetDatabase() == "safetyapps" &&
-          op.GetCollection() == "shared.apps"
-}
 
 func main() {
-  fmt.Println("starting spyder")
+  fmt.Println("starting spyder...")
 
+  session := getSession()
+  defer session.Close()
+
+  read(session)
+
+  fmt.Println("exiting spyder...")
+}
+
+func getSession() *mgo.Session {
   // get a mgo session
   session, err := mgo.Dial("localhost")
   if err != nil {
     panic(err)
   }
-  defer session.Close()
-  session.SetMode(mgo.Monotonic, true)
-
   fmt.Println("spyder connected to localhost")
+  session.SetMode(mgo.Monotonic, true)
+  return session;
+}
+
+func read(session *mgo.Session) {
+  var err error
 
   ops, errs := gtm.Tail(session, &gtm.Options{nil, getFilter})
   // Tail returns 2 channels - one for events and one for errors
   for {
     // loop forever receiving events
     select {
-    case err= <-errs:
+    case err = <-errs:
       // handle errors
       fmt.Println(err)
     case op:= <-ops:
@@ -45,4 +52,10 @@ func main() {
       fmt.Println(msg) // or do something more interesting
     }
   }
+}
+
+func getFilter(op *gtm.Op) bool {
+  return  op.Operation == "u" &&
+          op.GetDatabase() == "safetyapps" &&
+          op.GetCollection() == "shared.apps"
 }
