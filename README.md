@@ -2,10 +2,11 @@
 Let's snoop all those data changes, shall we.
 
 ## Prerequisites
-###mongo for go
-gtm (see http://go-search.org/view?id=github.com%2Frwynn%2Fgtm)
-bazaar (bzr) needed to install gtm
-yaml (see https://github.com/go-yaml/yaml)
+###go packages an other stuff
+* gtm (see http://go-search.org/view?id=github.com%2Frwynn%2Fgtm)
+* bazaar (bzr) needed to install gtm
+* yaml (see https://github.com/go-yaml/yaml)
+
 ```shell
 go get gopkg.in/mgo.v2
 brew install bzr
@@ -13,9 +14,10 @@ go get github.com/rwynn/gtm
 go get gopkg.in/yaml.v2
 ```
 
-###enable replicaset
-close running mongo instance if needed
-restart mongo using right db paths etc using replSet
+###enable replicaset in mongo
+* close running mongo instance if needed
+* restart mongo using right db paths etc using replSet
+
 ```shell
 mongod --port 27017 --dbpath /data/db --replSet rs0
 ```
