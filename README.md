@@ -5,10 +5,12 @@ Let's snoop all those data changes, shall we.
 ###mongo for go
 gtm (see http://go-search.org/view?id=github.com%2Frwynn%2Fgtm)
 bazaar (bzr) needed to install gtm
+yaml (see https://github.com/go-yaml/yaml)
 ```shell
 go get gopkg.in/mgo.v2
-go get github.com/rwynn/gtm
 brew install bzr
+go get github.com/rwynn/gtm
+go get gopkg.in/yaml.v2
 ```
 
 ###enable replicaset

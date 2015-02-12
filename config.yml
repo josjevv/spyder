@@ -1,0 +1,6 @@
+components:
+    history: true
+    notifications: false
+
+associations:
+    incidents: [history, notifications]

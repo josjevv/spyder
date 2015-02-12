@@ -1,9 +1,10 @@
-package main
+package spyder
 
-import "labix.org/v2/mgo"
-import "github.com/rwynn/gtm"
-import "fmt"
-
+import (
+  "fmt"
+  "github.com/rwynn/gtm"
+  "labix.org/v2/mgo"
+)
 
 func main() {
   fmt.Println("starting spyder...")
@@ -11,7 +12,7 @@ func main() {
   session := getSession()
   defer session.Close()
 
-  read(session)
+  read(session, readConfig())
 
   fmt.Println("exiting spyder...")
 }
@@ -22,12 +23,18 @@ func getSession() *mgo.Session {
   if err != nil {
     panic(err)
   }
-  fmt.Println("spyder connected to localhost")
+  fmt.Println("spyder connected to db")
   session.SetMode(mgo.Monotonic, true)
   return session;
 }
 
-func read(session *mgo.Session) {
+func getFilter(op *gtm.Op) bool {
+  return  op.Operation == "u" &&
+          op.GetDatabase() == "safetyapps" &&
+          op.GetCollection() == "shared.apps"
+}
+
+func read(session *mgo.Session, config Config) {
   var err error
 
   ops, errs := gtm.Tail(session, &gtm.Options{nil, getFilter})
@@ -52,10 +59,4 @@ func read(session *mgo.Session) {
       fmt.Println(msg) // or do something more interesting
     }
   }
-}
-
-func getFilter(op *gtm.Op) bool {
-  return  op.Operation == "u" &&
-          op.GetDatabase() == "safetyapps" &&
-          op.GetCollection() == "shared.apps"
 }
