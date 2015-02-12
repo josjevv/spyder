@@ -1,6 +1,36 @@
 # spyder
 Let's snoop all those data changes, shall we.
 
+## Prerequisites
+###mongo for go
+gtm (see http://go-search.org/view?id=github.com%2Frwynn%2Fgtm)
+bazaar (bzr) needed to install gtm
+```shell
+go get gopkg.in/mgo.v2
+go get github.com/rwynn/gtm
+brew install bzr
+```
+
+###enable replicaset
+close running mongo instance if needed
+restart mongo using right db paths etc using replSet
+```shell
+mongod --port 27017 --dbpath /data/db --replSet rs0
+```
+
+Connect to mongo
+```shell
+mongo
+```
+
+Initiate the replicaset and check for status
+```mongo
+rs.initiate()
+rs.status()
+```
+
+### Dev path
+
 * Pull the latest source code for API, Router & CarpetJs.
 
 * Create a Mongo Oplog reader in golang. You can use http://go-search.org/view?id=github.com%2Frwynn%2Fgtm for reference.
@@ -13,7 +43,7 @@ Let's snoop all those data changes, shall we.
 ---
 components:
  [component_type]: [boolean]
- 
+
 associations:
  <collection_name>: <component>
  <collection_name2>: [<component1>, <component2>]
