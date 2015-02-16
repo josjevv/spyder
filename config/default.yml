@@ -1,3 +1,5 @@
+connstring: "localhost"
+
 components:
     history: true
     notifications: false

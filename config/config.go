@@ -1,22 +1,31 @@
 package config
 
 import (
-	"fmt"
+	"flag"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"log"
 	"path/filepath"
 )
 
-func ReadConfig(path string) Config {
+type Config struct {
+	Connstring   string
+	Components   map[string]bool
+	Associations map[string][]string
+}
+
+func ReadConfig() Config {
+	var path string = CliArgs()
 	var yamlFile []byte
 	var err error
 
-	if path != "" {
-		path, _ = filepath.Abs("./default.yml")
+	if path == "" {
+		path, _ = filepath.Abs("./config/default.yml")
 	}
 	if path != "" {
 		yamlFile, err = ioutil.ReadFile(path)
 		if err != nil {
+			log.Fatal(err)
 			panic(err)
 		}
 	} //else {
@@ -27,21 +36,33 @@ func ReadConfig(path string) Config {
 
 	err = yaml.Unmarshal(yamlFile, &config)
 	if err != nil {
+		log.Fatal(err)
 		panic(err)
 	}
 
 	for c, _ := range config.Components {
-		fmt.Printf("Component %#v, enabled: %#v\n", c, config.Components[c])
+		log.Printf("Component %#v, enabled: %#v\n", c, config.Components[c])
 	}
 	for a, _ := range config.Associations {
 		for ac, _ := range config.Associations[a] {
-			fmt.Printf("Association %#v, item: %#v\n", a, config.Associations[a][ac])
+			log.Printf("Association %#v, item: %#v\n", a, config.Associations[a][ac])
 		}
 	}
 	return config
 }
 
-type Config struct {
-	Components   map[string]bool
-	Associations map[string][]string
+func CliArgs() string {
+	var config = flag.String(
+		"config",
+		"",
+		"Config [.yml format] file to load the configurations from",
+	)
+
+	flag.Parse()
+
+	if *config == "" {
+		log.Println("No config file supplied. Using defauls.")
+	}
+
+	return *config
 }
