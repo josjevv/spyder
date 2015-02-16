@@ -22,6 +22,7 @@ func main() {
 }
 
 func getFilter(op *gtm.Op) bool {
+	//TODO work out filtering
 	return op.Operation == "u" &&
 		op.GetDatabase() == "safetyapps" &&
 		op.GetCollection() == "shared.apps"

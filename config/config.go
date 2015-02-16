@@ -5,7 +5,6 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
-	"path/filepath"
 )
 
 type Config struct {
@@ -16,28 +15,12 @@ type Config struct {
 
 func ReadConfig() Config {
 	var path string = CliArgs()
-	var yamlFile []byte
-	var err error
-
-	if path == "" {
-		path, _ = filepath.Abs("./config/default.yml")
-	}
-	if path != "" {
-		yamlFile, err = ioutil.ReadFile(path)
-		if err != nil {
-			log.Fatal(err)
-			panic(err)
-		}
-	} //else {
-	//yamlFile := defaultConfig //Its a string not a location to a file.
-	//}
-
 	var config Config
 
-	err = yaml.Unmarshal(yamlFile, &config)
-	if err != nil {
-		log.Fatal(err)
-		panic(err)
+	if path != "" {
+		config = readYaml(path)
+	} else {
+		config = GetDefaultConfig()
 	}
 
 	for c, _ := range config.Components {
@@ -47,6 +30,23 @@ func ReadConfig() Config {
 		for ac, _ := range config.Associations[a] {
 			log.Printf("Association %#v, item: %#v\n", a, config.Associations[a][ac])
 		}
+	}
+	return config
+}
+
+func readYaml(path string) Config {
+	var config Config
+
+	yamlFile, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
+	}
+
+	err = yaml.Unmarshal(yamlFile, &config)
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
 	}
 	return config
 }
