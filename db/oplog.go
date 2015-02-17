@@ -10,9 +10,7 @@ import (
 
 func getFilter(op *gtm.Op) bool {
 	//TODO work out filtering
-	return op.Operation == "u" &&
-		op.GetDatabase() == "safetyapps" &&
-		op.GetCollection() == "shared.apps"
+	return true
 }
 
 func ReadOplog(session *mgo.Session, config config.Conf) {
