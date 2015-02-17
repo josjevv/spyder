@@ -3,7 +3,7 @@ package db
 import (
 	"log"
 
-	"github.com/aderjaan/spyder/config"
+	"github.com/changer/spyder/config"
 	"github.com/rwynn/gtm"
 	"labix.org/v2/mgo"
 )

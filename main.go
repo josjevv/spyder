@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/aderjaan/spyder/config"
-	"github.com/aderjaan/spyder/db"
+	"github.com/changer/spyder/config"
+	"github.com/changer/spyder/db"
 )
 
 func main() {
