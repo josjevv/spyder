@@ -8,15 +8,30 @@ import (
 	"labix.org/v2/mgo"
 )
 
-func getFilter(op *gtm.Op) bool {
-	//TODO work out filtering
-	return true
+func getFilter(config config.Conf) func(op *gtm.Op) bool {
+	return func(op *gtm.Op) bool {
+		return op.GetDatabase() == config.MongoDb &&
+			hasAssociation(config, op.GetCollection())
+	}
+}
+
+func hasAssociation(config config.Conf, association string) bool {
+	if _, present := config.Associations["all"]; present {
+		return true
+	}
+	_, present := config.Associations[association]
+	return present
+}
+
+func hasComponent(config config.Conf, component string) bool {
+	_, present := config.Components[component]
+	return present
 }
 
 func ReadOplog(session *mgo.Session, config config.Conf) {
 	var err error
 
-	ops, errs := gtm.Tail(session, &gtm.Options{nil, getFilter})
+	ops, errs := gtm.Tail(session, &gtm.Options{nil, getFilter(config)})
 	// Tail returns 2 channels - one for events and one for errors
 	for {
 		// loop forever receiving events
@@ -25,9 +40,14 @@ func ReadOplog(session *mgo.Session, config config.Conf) {
 			// handle errors
 			log.Println(err)
 		case op := <-ops:
-			// op will be an insert, delete or update to mongo
-			// you can check which by calling op.IsInsert(), op.IsDelete(), or op.IsUpdate()
-			// op.Data will get you the full document for inserts and updates
+			if hasComponent(config, "history") {
+				//historyChannel <- op
+			}
+			if hasComponent(config, "notification") {
+				//notificationChannel <- op
+			}
+			//logChannel <- op
+
 			log.Printf(`Got op <%v> for object <%v>
 			   in database <%v>
 			   and collection <%v>
@@ -35,7 +55,6 @@ func ReadOplog(session *mgo.Session, config config.Conf) {
 			   and timestamp <%v>`,
 				op.Operation, op.Id, op.GetDatabase(),
 				op.GetCollection(), op.Data, op.Timestamp)
-			//log.Println(msg) // or do something more interesting
 		}
 	}
 }
