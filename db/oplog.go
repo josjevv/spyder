@@ -8,16 +8,30 @@ import (
 	"labix.org/v2/mgo"
 )
 
+func getFilter(config config.Conf) func(op *gtm.Op) bool {
+	return func(op *gtm.Op) bool {
+		return op.GetDatabase() == config.MongoDb &&
+			hasAssociation(config, op.GetCollection())
+	}
+}
+
+func hasAssociation(config config.Conf, association string) bool {
+	if _, present := config.Associations["all"]; present {
+		return true
+	}
+	_, present := config.Associations[association]
+	return present
+}
+
+func hasComponent(config config.Conf, component string) bool {
+	_, present := config.Components[component]
+	return present
+}
+
 func ReadOplog(session *mgo.Session, config config.Conf) {
 	var err error
 
-	var getFilter func(op *gtm.Op) bool
-	getFilter = func(op *gtm.Op) bool {
-		return op.GetDatabase() == config.MongoDb &&
-			config.HasAssociation(op.GetCollection())
-	}
-
-	ops, errs := gtm.Tail(session, &gtm.Options{nil, getFilter})
+	ops, errs := gtm.Tail(session, &gtm.Options{nil, getFilter(config)})
 	// Tail returns 2 channels - one for events and one for errors
 	for {
 		// loop forever receiving events
@@ -26,10 +40,10 @@ func ReadOplog(session *mgo.Session, config config.Conf) {
 			// handle errors
 			log.Println(err)
 		case op := <-ops:
-			if config.HasComponent("history") {
+			if hasComponent(config, "history") {
 				//historyChannel <- op
 			}
-			if config.HasComponent("notification") {
+			if hasComponent(config, "notification") {
 				//notificationChannel <- op
 			}
 			//logChannel <- op
