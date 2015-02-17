@@ -1,11 +1,12 @@
 package main
 
 import (
+	"log"
+
 	"github.com/aderjaan/spyder/config"
 	"github.com/aderjaan/spyder/db"
 	"github.com/rwynn/gtm"
 	"labix.org/v2/mgo"
-	"log"
 )
 
 func main() {
