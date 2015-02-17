@@ -11,11 +11,11 @@ import (
 func getFilter(config config.Conf) func(op *gtm.Op) bool {
 	return func(op *gtm.Op) bool {
 		return op.GetDatabase() == config.MongoDb &&
-			hasAssociation(config, op.GetCollection())
+			useAssociation(config, op.GetCollection())
 	}
 }
 
-func hasAssociation(config config.Conf, association string) bool {
+func useAssociation(config config.Conf, association string) bool {
 	if _, present := config.Associations["all"]; present {
 		return true
 	}
@@ -23,7 +23,7 @@ func hasAssociation(config config.Conf, association string) bool {
 	return present
 }
 
-func hasComponent(config config.Conf, component string) bool {
+func useComponent(config config.Conf, component string) bool {
 	_, present := config.Components[component]
 	return present
 }
@@ -40,10 +40,10 @@ func ReadOplog(session *mgo.Session, config config.Conf) {
 			// handle errors
 			log.Println(err)
 		case op := <-ops:
-			if hasComponent(config, "history") {
+			if useComponent(config, "history") {
 				//historyChannel <- op
 			}
-			if hasComponent(config, "notification") {
+			if useComponent(config, "notification") {
 				//notificationChannel <- op
 			}
 			//logChannel <- op
