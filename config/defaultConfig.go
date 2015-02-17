@@ -1,22 +1,11 @@
 package config
 
-//TODO - could or should we use just a string or json here?
-func GetDefaultConfig() Config {
-	return Config{
-		Connstring: "localhost",
-		Components: map[string]bool{
-			"history":       true,
-			"notifications": false},
-		Associations: map[string][]string{
-			"incidents": []string{"history", "notifications"}}}
-}
-
-// yaml file content
-// connstring: "localhost"
-
-// components:
-//     history: true
-//     notifications: false
-
-// associations:
-//     incidents: [history, notifications]
+const defaultYaml = `
+---
+mongohost: 127.0.0.1:27017
+components:
+  history: true
+  notifications: true
+associations:
+  all: [history, notifications]
+`
