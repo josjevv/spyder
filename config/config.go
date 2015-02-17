@@ -1,68 +1,55 @@
 package config
 
 import (
-	"flag"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
-type Config struct {
-	Connstring   string
+type Conf struct {
+	MongoHost    string
 	Components   map[string]bool
 	Associations map[string][]string
 }
 
-func ReadConfig() Config {
-	var path string = CliArgs()
-	var config Config
+func ReadConfig() Conf {
+	var path string = cliArgs()
+
+	var confData []byte
 
 	if path != "" {
-		config = readYaml(path)
+		confData = readYaml(path)
 	} else {
-		config = GetDefaultConfig()
+		confData = []byte(defaultYaml)
 	}
 
-	for c, _ := range config.Components {
-		log.Printf("Component %#v, enabled: %#v\n", c, config.Components[c])
+	conf := Conf{}
+
+	err := yaml.Unmarshal(confData, &conf)
+	if err != nil {
+		panic(err)
 	}
-	for a, _ := range config.Associations {
-		for ac, _ := range config.Associations[a] {
-			log.Printf("Association %#v, item: %#v\n", a, config.Associations[a][ac])
+
+	log.Println(conf)
+
+	for c, _ := range conf.Components {
+		log.Printf("Component %#v, enabled: %#v\n", c, conf.Components[c])
+	}
+
+	for a, _ := range conf.Associations {
+		for ac, _ := range conf.Associations[a] {
+			log.Printf("Association %#v, item: %#v", a, conf.Associations[a][ac])
 		}
 	}
-	return config
+	return conf
 }
 
-func readYaml(path string) Config {
-	var config Config
-
+func readYaml(path string) []byte {
 	yamlFile, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Fatal(err)
 		panic(err)
 	}
 
-	err = yaml.Unmarshal(yamlFile, &config)
-	if err != nil {
-		log.Fatal(err)
-		panic(err)
-	}
-	return config
-}
-
-func CliArgs() string {
-	var config = flag.String(
-		"config",
-		"",
-		"Config [.yml format] file to load the configurations from",
-	)
-
-	flag.Parse()
-
-	if *config == "" {
-		log.Println("No config file supplied. Using defauls.")
-	}
-
-	return *config
+	return yamlFile
 }

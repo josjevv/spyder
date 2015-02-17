@@ -14,7 +14,7 @@ func main() {
 
 	config := config.ReadConfig()
 
-	session := db.GetSession(config.Connstring)
+	session := db.GetSession(config.MongoHost)
 	defer session.Close()
 
 	readOplog(session, config)
@@ -29,7 +29,7 @@ func getFilter(op *gtm.Op) bool {
 		op.GetCollection() == "shared.apps"
 }
 
-func readOplog(session *mgo.Session, config config.Config) {
+func readOplog(session *mgo.Session, config config.Conf) {
 	var err error
 
 	ops, errs := gtm.Tail(session, &gtm.Options{nil, getFilter})
