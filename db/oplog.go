@@ -3,7 +3,7 @@ package db
 import (
 	"log"
 
-	"github.com/changer/spyder/config"
+	config "github.com/changer/spyder/config"
 	"github.com/rwynn/gtm"
 	"labix.org/v2/mgo"
 )
@@ -28,8 +28,9 @@ func useComponent(config config.Conf, component string) bool {
 	return present
 }
 
-func ReadOplog(session *mgo.Session, config config.Conf) {
+func ReadOplog(session *mgo.Session, config config.Conf) chan *gtm.Op {
 	var err error
+	var logChannel = make(chan *gtm.Op)
 
 	ops, errs := gtm.Tail(session, &gtm.Options{nil, getFilter(config)})
 	// Tail returns 2 channels - one for events and one for errors
@@ -46,15 +47,25 @@ func ReadOplog(session *mgo.Session, config config.Conf) {
 			if useComponent(config, "notification") {
 				//notificationChannel <- op
 			}
-			//logChannel <- op
-
-			log.Printf(`Got op <%v> for object <%v>
+			log.Printf(`Oplog Got op <%v> for object <%v>
 			   in database <%v>
 			   and collection <%v>
 			   and data <%v>
 			   and timestamp <%v>`,
 				op.Operation, op.Id, op.GetDatabase(),
 				op.GetCollection(), op.Data, op.Timestamp)
+			logChannel <- op
 		}
 	}
+
+	return logChannel
 }
+
+//structure of Op
+// type Op struct {
+//     Id        interface{}
+//     Operation string
+//     Namespace string
+//     Data      map[string]interface{}
+//     Timestamp bson.MongoTimestamp
+// }

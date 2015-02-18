@@ -5,6 +5,7 @@ import (
 
 	"github.com/changer/spyder/config"
 	"github.com/changer/spyder/db"
+	logger "github.com/changer/spyder/plugins/logger"
 )
 
 func main() {
@@ -15,7 +16,8 @@ func main() {
 	session := db.GetSession(config.MongoHost)
 	defer session.Close()
 
-	db.ReadOplog(session, config)
+	logChannel := db.ReadOplog(session, config)
+	logger.Handle(logChannel)
 
 	log.Println("exiting spyder...")
 }
