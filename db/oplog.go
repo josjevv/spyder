@@ -31,6 +31,8 @@ func useComponent(config config.Conf, component string) bool {
 func ReadOplog(session *mgo.Session, config config.Conf) chan *gtm.Op {
 	var err error
 	var logChannel = make(chan *gtm.Op)
+	var logChannel = make(chan *gtm.Op)
+	var logChannel = make(chan *gtm.Op)
 
 	ops, errs := gtm.Tail(session, &gtm.Options{nil, getFilter(config)})
 	// Tail returns 2 channels - one for events and one for errors
