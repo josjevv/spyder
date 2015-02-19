@@ -2,6 +2,7 @@ package db
 
 import (
 	"log"
+	"time"
 
 	config "github.com/changer/spyder/config"
 	"github.com/rwynn/gtm"
@@ -28,11 +29,21 @@ func useComponent(config config.Conf, component string) bool {
 	return present
 }
 
-func ReadOplog(session *mgo.Session, config config.Conf) chan *gtm.Op {
+func createFly(op *gtm.Op) Fly {
+	fly := Fly{}
+
+	fly.Id = op.Id
+	fly.Operation = op.Operation
+	fly.Data = op.Data
+
+	return fly
+}
+
+func ReadOplog(session *mgo.Session, config config.Conf) (chan Fly, chan Fly) {
 	var err error
-	var logChannel = make(chan *gtm.Op)
-	var logChannel = make(chan *gtm.Op)
-	var logChannel = make(chan *gtm.Op)
+	var logChannel = make(chan Fly)
+	var historyChannel = make(chan Fly)
+	//var notificationChannel = make(chan *gtm.Op)
 
 	ops, errs := gtm.Tail(session, &gtm.Options{nil, getFilter(config)})
 	// Tail returns 2 channels - one for events and one for errors
@@ -44,25 +55,29 @@ func ReadOplog(session *mgo.Session, config config.Conf) chan *gtm.Op {
 				// handle errors
 				log.Println(err)
 			case op := <-ops:
+				fly := createFly(op)
+				fly.AppName = "log"
+				logChannel <- fly
 				if useComponent(config, "history") {
-					//historyChannel <- op
+					fly.AppName = "hist"
+					historyChannel <- fly
 				}
 				if useComponent(config, "notification") {
 					//notificationChannel <- op
 				}
-				logChannel <- op
 			}
 		}
 	}()
 
-	return logChannel
+	return logChannel, historyChannel
 }
 
-//structure of Op
-// type Op struct {
-//     Id        interface{}
-//     Operation string
-//     Namespace string
-//     Data      map[string]interface{}
-//     Timestamp bson.MongoTimestamp
-// }
+type Fly struct {
+	Id          interface{}
+	Operation   string
+	Data        map[string]interface{}
+	OrgId       string
+	AppName     string
+	UpdatedBy   string
+	DateUpdated *time.Time
+}

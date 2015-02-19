@@ -16,8 +16,11 @@ func main() {
 	session := db.GetSession(config.MongoHost)
 	defer session.Close()
 
-	logChannel := db.ReadOplog(session, config)
+	logChannel, historyChannel := db.ReadOplog(session, config)
 	logger.Handle(logChannel)
+	logger.Handle(historyChannel)
+
+	db.ReadOplog(session, config)
 
 	log.Println("exiting spyder...")
 }
