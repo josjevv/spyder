@@ -13,7 +13,7 @@ func Handle(oplog <-chan *gtm.Op) {
 	for item := range oplog {
 		wg.Add(1)
 		go func(op *gtm.Op) {
-			log.Printf(`<logger.go> Got op <%v> for object <%v>
+			log.Printf(`Got op <%v> for object <%v>
 			   in database <%v>
 			   and collection <%v>
 			   and data <%v>

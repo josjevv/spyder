@@ -34,29 +34,24 @@ func ReadOplog(session *mgo.Session, config config.Conf) chan *gtm.Op {
 
 	ops, errs := gtm.Tail(session, &gtm.Options{nil, getFilter(config)})
 	// Tail returns 2 channels - one for events and one for errors
-	for {
-		// loop forever receiving events
-		select {
-		case err = <-errs:
-			// handle errors
-			log.Println(err)
-		case op := <-ops:
-			if useComponent(config, "history") {
-				//historyChannel <- op
+	go func() {
+		for {
+			// loop forever receiving events
+			select {
+			case err = <-errs:
+				// handle errors
+				log.Println(err)
+			case op := <-ops:
+				if useComponent(config, "history") {
+					//historyChannel <- op
+				}
+				if useComponent(config, "notification") {
+					//notificationChannel <- op
+				}
+				logChannel <- op
 			}
-			if useComponent(config, "notification") {
-				//notificationChannel <- op
-			}
-			log.Printf(`Oplog Got op <%v> for object <%v>
-			   in database <%v>
-			   and collection <%v>
-			   and data <%v>
-			   and timestamp <%v>`,
-				op.Operation, op.Id, op.GetDatabase(),
-				op.GetCollection(), op.Data, op.Timestamp)
-			logChannel <- op
 		}
-	}
+	}()
 
 	return logChannel
 }
