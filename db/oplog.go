@@ -2,8 +2,9 @@ package db
 
 import (
 	"log"
+	"time"
 
-	"github.com/changer/spyder/config"
+	config "github.com/changer/spyder/config"
 	"github.com/rwynn/gtm"
 	"labix.org/v2/mgo"
 )
@@ -11,11 +12,11 @@ import (
 func getFilter(config config.Conf) func(op *gtm.Op) bool {
 	return func(op *gtm.Op) bool {
 		return op.GetDatabase() == config.MongoDb &&
-			hasAssociation(config, op.GetCollection())
+			useAssociation(config, op.GetCollection())
 	}
 }
 
-func hasAssociation(config config.Conf, association string) bool {
+func useAssociation(config config.Conf, association string) bool {
 	if _, present := config.Associations["all"]; present {
 		return true
 	}
@@ -23,38 +24,60 @@ func hasAssociation(config config.Conf, association string) bool {
 	return present
 }
 
-func hasComponent(config config.Conf, component string) bool {
+func useComponent(config config.Conf, component string) bool {
 	_, present := config.Components[component]
 	return present
 }
 
-func ReadOplog(session *mgo.Session, config config.Conf) {
+func createFly(op *gtm.Op) Fly {
+	fly := Fly{}
+
+	fly.Id = op.Id
+	fly.Operation = op.Operation
+	fly.Data = op.Data
+
+	return fly
+}
+
+func ReadOplog(session *mgo.Session, config config.Conf) (chan Fly, chan Fly) {
 	var err error
+	var logChannel = make(chan Fly)
+	var historyChannel = make(chan Fly)
+	//var notificationChannel = make(chan *gtm.Op)
 
 	ops, errs := gtm.Tail(session, &gtm.Options{nil, getFilter(config)})
 	// Tail returns 2 channels - one for events and one for errors
-	for {
-		// loop forever receiving events
-		select {
-		case err = <-errs:
-			// handle errors
-			log.Println(err)
-		case op := <-ops:
-			if hasComponent(config, "history") {
-				//historyChannel <- op
+	go func() {
+		for {
+			// loop forever receiving events
+			select {
+			case err = <-errs:
+				// handle errors
+				log.Println(err)
+			case op := <-ops:
+				fly := createFly(op)
+				fly.AppName = "log"
+				logChannel <- fly
+				if useComponent(config, "history") {
+					fly.AppName = "hist"
+					historyChannel <- fly
+				}
+				if useComponent(config, "notification") {
+					//notificationChannel <- op
+				}
 			}
-			if hasComponent(config, "notification") {
-				//notificationChannel <- op
-			}
-			//logChannel <- op
-
-			log.Printf(`Got op <%v> for object <%v>
-			   in database <%v>
-			   and collection <%v>
-			   and data <%v>
-			   and timestamp <%v>`,
-				op.Operation, op.Id, op.GetDatabase(),
-				op.GetCollection(), op.Data, op.Timestamp)
 		}
-	}
+	}()
+
+	return logChannel, historyChannel
+}
+
+type Fly struct {
+	Id          interface{}
+	Operation   string
+	Data        map[string]interface{}
+	OrgId       string
+	AppName     string
+	UpdatedBy   string
+	DateUpdated *time.Time
 }
