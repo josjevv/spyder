@@ -5,22 +5,50 @@ import (
 
 	"github.com/changer/spyder/config"
 	"github.com/changer/spyder/db"
-	logger "github.com/changer/spyder/plugins/logger"
 )
+
+func useComponent(config config.Conf, component string) bool {
+	_, present := config.Components[component]
+	return present
+}
 
 func main() {
 	log.Println("starting spyder...")
 
-	config := config.ReadConfig()
+	settings := config.ReadConfig()
 
-	session := db.GetSession(config.MongoHost)
+	session := db.GetSession(settings.MongoHost)
 	defer session.Close()
 
-	logChannel, historyChannel := db.ReadOplog(session, config)
-	logger.Handle(logChannel)
-	logger.Handle(historyChannel)
+	chans := db.FlyChans{}
 
-	db.ReadOplog(session, config)
+	if useComponent(settings, "notifications") {
+		noticeChannel := make(chan *db.Fly)
+
+		go func(ch <-chan *db.Fly) {
+			log.Println("Waiting for a Fly on Notifications")
+			for fly := range ch {
+				log.Println(fly)
+			}
+		}(noticeChannel)
+
+		chans = append(chans, noticeChannel)
+	}
+
+	if useComponent(settings, "history") {
+		historyChannel := make(chan *db.Fly)
+
+		go func(ch <-chan *db.Fly) {
+			log.Println("Waiting for a Fly on History")
+			for fly := range ch {
+				log.Println(fly)
+			}
+		}(historyChannel)
+
+		chans = append(chans, historyChannel)
+	}
+
+	db.ReadOplog(settings, session, &chans)
 
 	log.Println("exiting spyder...")
 }
