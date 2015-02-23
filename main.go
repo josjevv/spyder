@@ -5,7 +5,11 @@ import (
 
 	"github.com/changer/spyder/config"
 	"github.com/changer/spyder/db"
+<<<<<<< HEAD
 	"github.com/changer/spyder/plugins"
+=======
+	logger "github.com/changer/spyder/plugins/logger"
+>>>>>>> some refactoring etc
 )
 
 func useComponent(config config.Conf, component string) bool {
@@ -23,9 +27,34 @@ func main() {
 
 	chans := db.FlyChans{}
 
+<<<<<<< HEAD
 	if useComponent(settings, "notifications") {
 		channel := plugins.NotificationListener()
 		chans = append(chans, channel)
+=======
+	loggerChannel := make(chan *db.Fly)
+
+	go func(ch <-chan *db.Fly) {
+		log.Println("Waiting for a Fly on Logger")
+		for fly := range ch {
+			logger.Handle(fly)
+		}
+	}(loggerChannel)
+
+	chans = append(chans, loggerChannel)
+
+	if useComponent(settings, "notificationds") {
+		noticeChannel := make(chan *db.Fly)
+
+		go func(ch <-chan *db.Fly) {
+			log.Println("Waiting for a Fly on Notifications")
+			for fly := range ch {
+				log.Println(fly)
+			}
+		}(noticeChannel)
+
+		chans = append(chans, noticeChannel)
+>>>>>>> some refactoring etc
 	}
 
 	if useComponent(settings, "hwistory") {

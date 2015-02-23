@@ -2,7 +2,7 @@ package db
 
 import (
 	"log"
-	"time"
+	//"time"
 
 	"github.com/rwynn/gtm"
 )
@@ -13,9 +13,9 @@ type Fly struct {
 	Data         map[string]interface{}
 	Organization interface{}
 	AppName      string
+	Collection   string
 	UpdatedBy    interface{}
 	DateUpdated  *time.Time
-	Timestamp    int64
 }
 
 func createFly(op *gtm.Op) *Fly {
@@ -34,6 +34,7 @@ func createFly(op *gtm.Op) *Fly {
 
 	fly.Id = op.Id
 	fly.Operation = op.Operation
+	fly.Collection = op.GetCollection()
 	fly.Data = op.Data
 	fly.Timestamp = int64(op.Timestamp)
 
@@ -44,9 +45,7 @@ func createFly(op *gtm.Op) *Fly {
 	if appName, ok := handleKey("app_name").(string); ok {
 		fly.AppName = appName
 	}
-	if dateUpdated, ok := handleKey("date_updated").(*time.Time); ok {
-		fly.DateUpdated = dateUpdated
-	}
+	fly.DateUpdated = handleKey("date_updated")
 
 	return &fly
 }
