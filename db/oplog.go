@@ -11,7 +11,8 @@ import (
 func getFilter(config config.Conf) func(op *gtm.Op) bool {
 	return func(op *gtm.Op) bool {
 		return op.GetDatabase() == config.MongoDb &&
-			useAssociation(config, op.GetCollection())
+			useAssociation(config, op.GetCollection()) &&
+			op.GetCollection() != "shared.history"
 	}
 }
 

@@ -28,7 +28,7 @@ func main() {
 		chans = append(chans, channel)
 	}
 
-	if useComponent(settings, "history") {
+	if useComponent(settings, "hwistory") {
 		historyChannel := make(chan *db.Fly)
 
 		go func(ch <-chan *db.Fly) {
