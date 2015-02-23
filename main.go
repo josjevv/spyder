@@ -27,6 +27,7 @@ func main() {
 
 	chans := db.FlyChans{}
 
+<<<<<<< HEADwr
 <<<<<<< HEAD
 	if useComponent(settings, "notifications") {
 		channel := plugins.NotificationListener()
@@ -38,39 +39,42 @@ func main() {
 		log.Println("Waiting for a Fly on Logger")
 		for fly := range ch {
 			logger.Handle(fly)
+=======
+	var addHandler func(handler Handler, key string)
+	addHandler = func(handler Handler, key string) {
+		if !useComponent(settings, key) {
+			return
+>>>>>>> some refactoring and finding out - go
 		}
-	}(loggerChannel)
 
-	chans = append(chans, loggerChannel)
-
-	if useComponent(settings, "notificationds") {
-		noticeChannel := make(chan *db.Fly)
+		newChannel := make(chan *db.Fly)
 
 		go func(ch <-chan *db.Fly) {
-			log.Println("Waiting for a Fly on Notifications")
+			log.Printf("Waiting for a Fly on %v", key)
 			for fly := range ch {
-				log.Println(fly)
+				handler.Handle(fly, settings)
 			}
-		}(noticeChannel)
+		}(newChannel)
 
+<<<<<<< HEAD
 		chans = append(chans, noticeChannel)
 >>>>>>> some refactoring etc
+=======
+		chans = append(chans, newChannel)
+>>>>>>> some refactoring and finding out - go
 	}
 
-	if useComponent(settings, "hwistory") {
-		historyChannel := make(chan *db.Fly)
+	addHandler(logger.Logger{}, "logger")
+	addHandler(logger.Logger{}, "notificationds")
+	addHandler(logger.Logger{}, "history")
 
-		go func(ch <-chan *db.Fly) {
-			log.Println("Waiting for a Fly on History")
-			for fly := range ch {
-				log.Println(fly)
-			}
-		}(historyChannel)
-
-		chans = append(chans, historyChannel)
-	}
+	log.Println(chans)
 
 	db.ReadOplog(settings, session, &chans)
 
 	log.Println("exiting spyder...")
+}
+
+type Handler interface {
+	Handle(fly *db.Fly, settings config.Conf)
 }

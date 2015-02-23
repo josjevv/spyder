@@ -2,7 +2,6 @@ package db
 
 import (
 	"log"
-	//"time"
 
 	"github.com/rwynn/gtm"
 )
@@ -15,7 +14,7 @@ type Fly struct {
 	AppName      string
 	Collection   string
 	UpdatedBy    interface{}
-	DateUpdated  *time.Time
+	DateUpdated  interface{}
 }
 
 func createFly(op *gtm.Op) *Fly {
