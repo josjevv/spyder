@@ -8,8 +8,8 @@ import (
 )
 
 func useComponent(config config.Conf, component string) bool {
-	_, present := config.Components[component]
-	return present
+	value, present := config.Components[component]
+	return present && value
 }
 
 func main() {
