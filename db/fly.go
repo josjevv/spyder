@@ -1,19 +1,12 @@
 package db
 
-import (
-	"time"
-
-	"github.com/rwynn/gtm"
-)
+import "github.com/rwynn/gtm"
 
 type Fly struct {
 	Id        interface{}
 	Operation string
 	Data      map[string]interface{}
-	OrgId     string
-	AppName   string
-	UpdatedBy string
-	Timestamp *time.Time
+	Timestamp int64
 }
 
 func createFly(op *gtm.Op) *Fly {
@@ -22,6 +15,7 @@ func createFly(op *gtm.Op) *Fly {
 	fly.Id = op.Id
 	fly.Operation = op.Operation
 	fly.Data = op.Data
+	fly.Timestamp = int64(op.Timestamp)
 
 	return &fly
 }
