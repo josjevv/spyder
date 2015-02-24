@@ -6,7 +6,13 @@ import (
 	"github.com/changer/spyder/db"
 )
 
-func NewNotification(fly *db.Fly) {
+const NotificationPlugin = "notifications"
+
+func NotificationListener() chan *db.Fly {
+	return createListener(newNotification, NotificationPlugin)
+}
+
+func newNotification(fly *db.Fly) {
 	organization := fly.GetOrganization()
 	app_name := fly.GetAppname()
 	updated_by := fly.GetUpdatedBy()

@@ -8,7 +8,7 @@ import (
 
 type Handler func(fly *db.Fly)
 
-func CreateListener(handler Handler, key string) chan *db.Fly {
+func createListener(handler Handler, key string) chan *db.Fly {
 	channel := make(chan *db.Fly)
 
 	go func(ch <-chan *db.Fly) {
