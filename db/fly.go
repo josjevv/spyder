@@ -1,9 +1,13 @@
 package db
 
 import (
+<<<<<<< HEAD
 	"log"
 
+=======
+>>>>>>> some handlers setup
 	"github.com/rwynn/gtm"
+	"log"
 )
 
 type Fly struct {
