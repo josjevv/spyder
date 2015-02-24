@@ -5,6 +5,7 @@ import (
 
 	"github.com/changer/spyder/config"
 	"github.com/changer/spyder/db"
+	"github.com/changer/spyder/plugins"
 )
 
 func useComponent(config config.Conf, component string) bool {
@@ -23,16 +24,8 @@ func main() {
 	chans := db.FlyChans{}
 
 	if useComponent(settings, "notifications") {
-		noticeChannel := make(chan *db.Fly)
-
-		go func(ch <-chan *db.Fly) {
-			log.Println("Waiting for a Fly on Notifications")
-			for fly := range ch {
-				log.Println(fly)
-			}
-		}(noticeChannel)
-
-		chans = append(chans, noticeChannel)
+		channel := plugins.NotificationListener()
+		chans = append(chans, channel)
 	}
 
 	if useComponent(settings, "history") {
