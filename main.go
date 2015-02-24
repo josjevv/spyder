@@ -23,22 +23,16 @@ func main() {
 
 	chans := db.FlyChans{}
 
+	chans = append(chans, plugins.LogListener())
+
 	if useComponent(settings, "notifications") {
 		channel := plugins.NotificationListener()
 		chans = append(chans, channel)
 	}
 
 	if useComponent(settings, "history") {
-		historyChannel := make(chan *db.Fly)
-
-		go func(ch <-chan *db.Fly) {
-			log.Println("Waiting for a Fly on History")
-			for fly := range ch {
-				log.Println(fly)
-			}
-		}(historyChannel)
-
-		chans = append(chans, historyChannel)
+		channel := plugins.HistoryListener(settings, session)
+		chans = append(chans, channel)
 	}
 
 	db.ReadOplog(settings, session, &chans)

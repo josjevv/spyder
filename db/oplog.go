@@ -8,18 +8,19 @@ import (
 	"labix.org/v2/mgo"
 )
 
-func getFilter(config config.Conf) func(op *gtm.Op) bool {
+func getFilter(settings config.Conf) func(op *gtm.Op) bool {
 	return func(op *gtm.Op) bool {
-		return op.GetDatabase() == config.MongoDb &&
-			useAssociation(config, op.GetCollection())
+		return op.GetDatabase() == settings.MongoDb &&
+			useAssociation(settings, op.GetCollection()) &&
+			op.GetCollection() != "shared.history"
 	}
 }
 
-func useAssociation(config config.Conf, association string) bool {
-	if _, present := config.Associations["all"]; present {
+func useAssociation(settings config.Conf, association string) bool {
+	if _, present := settings.Associations["all"]; present {
 		return true
 	}
-	_, present := config.Associations[association]
+	_, present := settings.Associations[association]
 	return present
 }
 
