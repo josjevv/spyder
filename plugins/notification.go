@@ -20,10 +20,9 @@ func NotificationListener() chan *db.Fly {
 }
 
 func newEvent(fly *db.Fly) {
-	organization := fly.Data["organization"]
-
-	app_name := fly.Data["app_name"]
-	updated_by := fly.Data["updated_by"]
+	organization := fly.GetOrganization()
+	app_name := fly.GetAppname()
+	updated_by := fly.GetUpdatedBy()
 
 	log.Println(organization, app_name, updated_by)
 
