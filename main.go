@@ -26,13 +26,11 @@ func main() {
 	chans = append(chans, plugins.LogListener())
 
 	if useComponent(settings, "notifications") {
-		channel := plugins.NotificationListener()
-		chans = append(chans, channel)
+		chans = append(chans, plugins.CreateListener(plugins.NewNotification, "notifications"))
 	}
 
 	if useComponent(settings, "history") {
-		channel := plugins.HistoryListener(settings, session)
-		chans = append(chans, channel)
+		chans = append(chans, plugins.CreateListener(plugins.NewHistoryHandler(settings, session), "notifications"))
 	}
 
 	db.ReadOplog(settings, session, &chans)
