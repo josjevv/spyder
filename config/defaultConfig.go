@@ -12,4 +12,5 @@ associations:
   all: [logger, history, notifications]
 notifications:
   incidentapp.publications: true
+  actionapp.actions: true
 `
