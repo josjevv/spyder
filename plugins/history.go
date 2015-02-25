@@ -3,10 +3,11 @@ package plugins
 import (
 	"log"
 
-	mgo "labix.org/v2/mgo"
+	"gopkg.in/mgo.v2"
 
 	config "github.com/changer/spyder/config"
 	db "github.com/changer/spyder/db"
+	bson "gopkg.in/mgo.v2/bson"
 )
 
 func HistoryListener(settings *config.Conf, session *mgo.Session) chan *db.Fly {
@@ -30,19 +31,22 @@ func HistoryListener(settings *config.Conf, session *mgo.Session) chan *db.Fly {
 }
 
 func historyHandler(settings *config.Conf, session *mgo.Session, fly *db.Fly) {
-	var newHist = db.Hist{}
+	var newHist = history{}
 	newHist.User = fly.GetUpdatedBy()
 	newHist.Date = fly.Timestamp
-	newHist.Entity = db.HistoryEntity{}
-	newHist.Entity.Ref = fly.Collection
+	newHist.Entity = historyEntity{}
+	newHist.Entity.Ref = fly.GetCollection()
 	newHist.Entity.Id = fly.GetId()
 
 	if !fly.IsInsert() {
-		histories, found := db.GetHistories(session, settings.MongoDb, fly.GetId(), fly.Collection)
+		histories, found := getHistories(session, settings.MongoDb, fly.GetId(), fly.GetCollection())
+		if found && len(histories) > 0 {
+			log.Println(histories[0])
+		}
 	}
 
-	for key, value := range fly.Data {
-		changes[key] = value
+	for key, value := range fly.Object {
+		log.Printf("changes[%v] = %v", key, value)
 	}
 
 	// user: { type: $.mongoose.Schema.ObjectId, ref: 'shared.User', index: true },
@@ -52,4 +56,34 @@ func historyHandler(settings *config.Conf, session *mgo.Session, fly *db.Fly) {
 
 	// add history 2 db
 	log.Print("history is not implemented (yet)")
+}
+
+func getHistories(session *mgo.Session, dbName string, id string, collection string) ([]history, bool) {
+	var result []history
+	c := session.DB(dbName).C("shared.history")
+
+	log.Printf("Id: %v , collection: %v", id, collection)
+	err := c.Find(bson.M{"entity.$id": id, "entity.$ref": collection}).Sort("-date").All(&result)
+
+	if err != nil {
+		log.Print("History for key not found : " + err.Error())
+		return result, false
+	}
+	return result, true
+}
+
+type history struct {
+	Id           bson.ObjectId       `json:"id"        bson:"_id,omitempty"`
+	Organization string              `json:"organization"`
+	User         string              `json:"user"`
+	Date         bson.MongoTimestamp `json:"date"`
+	DateCreated  string              `json:"date_created"`
+	DateUpdated  string              `json:"date_updated"`
+	Entity       historyEntity       `json:"entity"`
+	//changes
+}
+
+type historyEntity struct {
+	Ref string `json:"$ref"`
+	Id  string `json:"$id"`
 }

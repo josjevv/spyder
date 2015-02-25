@@ -21,7 +21,6 @@ type Fly struct {
 }
 
 func getId(item interface{}) (val string, err error) {
-
 	switch _id := item.(type) {
 	case string:
 		val = _id
@@ -137,23 +136,6 @@ func (this *Fly) ParseEntry() (err error) {
 
 	this.updateSpec = update_spec.(bson.M)
 	return
-}
-
-func (fly *Fly) GetId() string {
-	organizationId := fly.Id.(bson.ObjectId)
-	return organizationId.Hex()
-}
-
-func (fly *Fly) IsInsert() bool {
-	return fly.Operation == "i"
-}
-
-func (fly *Fly) IsUpdate() bool {
-	return fly.Operation == "u"
-}
-
-func (fly *Fly) IsDelete() bool {
-	return fly.Operation == "d"
 }
 
 type FlyChans []chan *Fly
