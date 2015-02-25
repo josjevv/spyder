@@ -24,11 +24,11 @@ func main() {
 	chans := db.FlyChans{}
 
 	if useComponent(settings, "notifications") {
-		chans = append(chans, plugins.NotificationListener())
+		chans = append(chans, plugins.NotificationListener(&settings))
 	}
 
 	if useComponent(settings, "history") {
-		chans = append(chans, plugins.HistoryListener())
+		chans = append(chans, plugins.HistoryListener(&settings))
 	}
 
 	db.ReadOplog(settings, session, &chans)

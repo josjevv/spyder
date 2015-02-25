@@ -3,16 +3,17 @@ package plugins
 import (
 	"log"
 
+	"github.com/changer/spyder/config"
 	db "github.com/changer/spyder/db"
 )
 
 const HistoryPlugin = "history"
 
-func HistoryListener() chan *db.Fly {
-	return createListener(historyHandler, HistoryPlugin)
+func HistoryListener(settings *config.Conf) chan *db.Fly {
+	return createListener(settings, historyHandler, HistoryPlugin)
 }
 
-func historyHandler(fly *db.Fly) {
+func historyHandler(settings *config.Conf, fly *db.Fly) {
 	if fly.Operation != "i" {
 		/*
 			hist, found := db.GetHistory(session, settings.MongoDb, "", fly.Collection) //fly.Id)
