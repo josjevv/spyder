@@ -139,4 +139,9 @@ func (this *Fly) ParseEntry() (err error) {
 	return
 }
 
+func (fly *Fly) GetId() string {
+	organizationId := fly.Id.(bson.ObjectId)
+	return organizationId.Hex()
+}
+
 type FlyChans []chan *Fly
