@@ -4,7 +4,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/kr/pretty"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -99,8 +98,6 @@ func (this *Fly) ParseId() {
 	}
 
 	this.updateSpec = update_spec.(bson.M)
-	log.Printf("%# v", pretty.Formatter(this.updateSpec))
-
 }
 
 type FlyChans []chan *Fly
