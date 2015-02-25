@@ -17,12 +17,12 @@ func NotificationListener(settings *config.Conf) chan *db.Fly {
 		log.Println("Waiting for a Fly on Notifications")
 
 		for fly := range ch {
-			ok, present := settings.Notifications[fly.Collection]
+			ok, present := settings.Notifications[fly.GetCollection()]
 			//if !present || ok {
 			if ok {
 				go newNotification(settings, fly)
 			} else {
-				log.Printf(missingSetting, fly.Operation, fly.Database, fly.Collection, present)
+				log.Printf(missingSetting, fly.Operation, fly.GetDatabase(), fly.GetCollection(), present)
 			}
 		}
 	}(channel)
@@ -31,31 +31,17 @@ func NotificationListener(settings *config.Conf) chan *db.Fly {
 }
 
 func newNotification(settings *config.Conf, fly *db.Fly) {
-	//log.Printf("%# v", pretty.Formatter(*fly))
-
 	organization := fly.GetOrganization()
 	app := fly.GetAppname()
 	user := fly.GetUpdatedBy()
 
 	if app == "" || organization == "" {
-		log.Printf(missingParams, fly.Operation, fly.Database, fly.Collection, organization, app)
+		log.Printf(missingParams, fly.Operation, fly.GetDatabase(), fly.GetCollection(), organization, app)
 		return
-	}
-
-	var action string
-
-	switch fly.Operation {
-	case "i":
-		action = "inserted"
-	case "u":
-		action = "updated"
-	case "d":
-		action = "deleted"
-	default:
-		action = "Unknown"
 	}
 
 	evtStr := "[%v] %v in [%v] - [%v]. Organization: [%v]. User [%v]"
 
-	log.Printf(evtStr, app, action, fly.Database, fly.Collection, organization, user)
+	log.Printf(evtStr, app, fly.Operation, fly.GetDatabase(), fly.GetCollection(), organization, user)
+	//log.Printf("%# v", pretty.Formatter(fly.Data))
 }

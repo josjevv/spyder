@@ -4,12 +4,11 @@ import (
 	"log"
 
 	config "github.com/changer/spyder/config"
-	"github.com/rwynn/gtm"
-	"labix.org/v2/mgo"
+	"gopkg.in/mgo.v2"
 )
 
-func getFilter(settings config.Conf) func(op *gtm.Op) bool {
-	return func(op *gtm.Op) bool {
+func getFilter(settings config.Conf) func(op *Fly) bool {
+	return func(op *Fly) bool {
 		return op.GetDatabase() == settings.MongoDb &&
 			useAssociation(settings, op.GetCollection()) &&
 			op.GetCollection() != "shared.history"
@@ -27,7 +26,7 @@ func useAssociation(settings config.Conf, association string) bool {
 func ReadOplog(settings config.Conf, session *mgo.Session, channels *FlyChans) {
 	var err error
 
-	ops, errs := gtm.Tail(session, &gtm.Options{nil, getFilter(settings)})
+	ops, errs := tail(session, &tailOptions{nil, getFilter(settings)})
 	// Tail returns 2 channels - one for events and one for errors
 	func() {
 		for {
@@ -37,8 +36,7 @@ func ReadOplog(settings config.Conf, session *mgo.Session, channels *FlyChans) {
 				// handle errors
 				log.Println(err)
 
-			case op := <-ops:
-				fly := createFly(op)
+			case fly := <-ops:
 				for i := range *channels {
 					(*channels)[i] <- fly
 				}
