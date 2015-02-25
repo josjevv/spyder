@@ -9,11 +9,17 @@ import (
 func ReadConfig() Conf {
 	var path string = cliArgs()
 	conf := Conf{}
-	yaml.Unmarshal([]byte(defaultYaml), &conf)
+	err := yaml.Unmarshal([]byte(defaultYaml), &conf)
+	if err != nil {
+		panic(err)
+	}
 
 	if path != "" {
 		confData := readYaml(path)
-		yaml.Unmarshal(confData, &conf)
+		err := yaml.Unmarshal(confData, &conf)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return conf
