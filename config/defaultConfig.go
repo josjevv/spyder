@@ -10,4 +10,6 @@ components:
   notifications: true
 associations:
   all: [logger, history, notifications]
+notifications:
+  incidentapp.publications: true
 `
