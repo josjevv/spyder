@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"log"
+	"time"
 
 	"gopkg.in/mgo.v2"
 
@@ -32,8 +33,8 @@ func HistoryListener(settings *config.Conf, session *mgo.Session) chan *db.Fly {
 
 func historyHandler(settings *config.Conf, session *mgo.Session, fly *db.Fly) {
 	var newHist = history{}
-	newHist.User = fly.GetUpdatedBy()
-	newHist.Date = fly.Timestamp
+	newHist.User = bson.ObjectIdHex(fly.GetUpdatedBy())
+	//newHist.Date = fly.Timestamp
 	newHist.Entity = historyEntity{}
 	newHist.Entity.Ref = fly.GetCollection()
 	newHist.Entity.Id = fly.GetId()
@@ -41,12 +42,26 @@ func historyHandler(settings *config.Conf, session *mgo.Session, fly *db.Fly) {
 	if !fly.IsInsert() {
 		histories, found := getHistories(session, settings.MongoDb, fly.GetId(), fly.GetCollection())
 		if found && len(histories) > 0 {
-			log.Println(histories[0])
+			var entry = histories[0]
+			log.Printf("Hist0.%v: %v", "Date", entry.Date)
+			log.Printf("Hist0.%v: %v", "DateCreated", entry.DateCreated)
+			log.Printf("Hist0.%v: %v", "DateUpdated", entry.DateUpdated)
+
+			//Entity won't get loaded
+			log.Printf("Hist0.%v: %v", "Entity.Id", entry.Entity.Id)
+			log.Printf("Hist0.%v: %v", "Entity.Ref", entry.Entity.Ref)
+
+			//id won't get loaded
+			log.Printf("Hist0.%v: %v", "Id", entry.Id.Hex())
+			log.Printf("Hist0.%v: %v", "Organization", entry.Organization.Hex())
+			log.Printf("Hist0.%v: %v", "User", entry.User.Hex())
 		}
 	}
 
 	for key, value := range fly.Object {
-		log.Printf("changes[%v] = %v", key, value)
+		if key != "update_spec" {
+			log.Printf("changes[%v] = %v", key, value)
+		}
 	}
 
 	// user: { type: $.mongoose.Schema.ObjectId, ref: 'shared.User', index: true },
@@ -73,13 +88,13 @@ func getHistories(session *mgo.Session, dbName string, id string, collection str
 }
 
 type history struct {
-	Id           bson.ObjectId       `json:"id"        bson:"_id,omitempty"`
-	Organization string              `json:"organization"`
-	User         string              `json:"user"`
-	Date         bson.MongoTimestamp `json:"date"`
-	DateCreated  string              `json:"date_created"`
-	DateUpdated  string              `json:"date_updated"`
-	Entity       historyEntity       `json:"entity"`
+	Id           bson.ObjectId `json:"_id"`
+	Organization bson.ObjectId `json:"organization"`
+	User         bson.ObjectId `json:"user"`
+	Date         time.Time     `json:"date"`
+	DateCreated  time.Time     `json:"date_created"`
+	DateUpdated  time.Time     `json:"date_updated"`
+	Entity       historyEntity `json:"entity"`
 	//changes
 }
 
@@ -87,3 +102,6 @@ type historyEntity struct {
 	Ref string `json:"$ref"`
 	Id  string `json:"$id"`
 }
+
+//use a map here?
+// changes" : [ { "key" : "name", "from" : "function-group 0", "to" : "sjaak" }, { "key" : "update_spec", "to" : { "organization" : "54eddb6acfd92cb9eeedec6c", "updated_by" : "c0ffeeeeeeeeeeeeeeeeeeee", "app_name" : "adminapp", "timestamp" : 1424874745497 } } ]
