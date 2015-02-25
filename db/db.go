@@ -3,8 +3,8 @@ package db
 import (
 	"log"
 
-	"gopkg.in/mgo.v2/bson"
 	"labix.org/v2/mgo"
+	"labix.org/v2/mgo/bson"
 )
 
 func GetSession(connString string) *mgo.Session {

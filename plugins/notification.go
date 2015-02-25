@@ -17,7 +17,7 @@ func newNotification(fly *db.Fly) {
 	app_name := fly.GetAppname()
 	updated_by := fly.GetUpdatedBy()
 
-	log.Println(organization, app_name, updated_by)
+	log.Println(app_name, organization, updated_by)
 
 	log.Println("Event generated at: ", fly.Timestamp)
 }
