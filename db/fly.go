@@ -38,7 +38,12 @@ func (fly *Fly) GetOrganization() string {
 }
 
 func (fly *Fly) GetAppname() string {
-	return fly.Data["app_name"].(string)
+	app := fly.Data["app_name"]
+	if app == nil {
+		return ""
+	}
+
+	return app.(string)
 }
 
 func (fly *Fly) GetUpdatedBy() interface{} {
