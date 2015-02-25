@@ -18,12 +18,12 @@ func GetSession(connString string) *mgo.Session {
 	return session
 }
 
-func GetHistory(session *mgo.Session, dbName string, id string, collection string) (History, bool) {
-	result := History{}
+func GetHistories(session *mgo.Session, dbName string, id string, collection string) ([]History, bool) {
+	var result []History
 	c := session.DB(dbName).C("shared.history")
 
 	log.Printf("Id: %v , collection: %v", id, collection)
-	err := c.Find(bson.M{"entity.$id": id, "entity.$ref": collection}).One(&result)
+	err := c.Find(bson.M{"entity.$id": id, "entity.$ref": collection}).Sort("-date").All(&result)
 
 	if err != nil {
 		log.Print("History for key not found : " + err.Error())
@@ -39,6 +39,11 @@ type History struct {
 	Date         string        `json:"date"`
 	DateCreated  string        `json:"date_created"`
 	DateUpdated  string        `json:"date_updated"`
-	//Entity       string        `json:"entity"`
+	Entity       HistoryEntity `json:"entity"`
 	//changes
+}
+
+type HistoryEntity struct {
+	Ref string `json:"$ref"`
+	Id  string `json:"$id"`
 }

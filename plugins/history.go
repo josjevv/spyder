@@ -30,16 +30,26 @@ func HistoryListener(settings *config.Conf, session *mgo.Session) chan *db.Fly {
 }
 
 func historyHandler(settings *config.Conf, session *mgo.Session, fly *db.Fly) {
-	if fly.Operation != "i" {
-		hist, found := db.GetHistory(session, settings.MongoDb, fly.GetId(), fly.Collection)
-		if found {
-			log.Print(hist)
-		} else {
-			log.Print("hist not found")
-		}
+	var newHist = db.Hist{}
+	newHist.User = fly.GetUpdatedBy()
+	newHist.Date = fly.Timestamp
+	newHist.Entity = db.HistoryEntity{}
+	newHist.Entity.Ref = fly.Collection
+	newHist.Entity.Id = fly.GetId()
+
+	if !fly.IsInsert() {
+		histories, found := db.GetHistories(session, settings.MongoDb, fly.GetId(), fly.Collection)
 	}
-	// create from and to stuff
-	//
+
+	for key, value := range fly.Data {
+		changes[key] = value
+	}
+
+	// user: { type: $.mongoose.Schema.ObjectId, ref: 'shared.User', index: true },
+	//  date: { type: Date, default: Date.now },
+	//  changes: [],
+	//  entity: { type: Object }
+
 	// add history 2 db
 	log.Print("history is not implemented (yet)")
 }

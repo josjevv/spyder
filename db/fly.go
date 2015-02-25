@@ -144,4 +144,16 @@ func (fly *Fly) GetId() string {
 	return organizationId.Hex()
 }
 
+func (fly *Fly) IsInsert() bool {
+	return fly.Operation == "i"
+}
+
+func (fly *Fly) IsUpdate() bool {
+	return fly.Operation == "u"
+}
+
+func (fly *Fly) IsDelete() bool {
+	return fly.Operation == "d"
+}
+
 type FlyChans []chan *Fly
