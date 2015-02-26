@@ -81,18 +81,25 @@ func (this *Fly) ParseId() {
 		}
 	}
 
-	setOp := this.Object["$set"]
-	if setOp == nil {
-		return
+	var opBson bson.M
+	var ok bool
+
+	if this.IsInsert() {
+		opBson = this.Object
+	} else if this.IsUpdate() {
+		setOp := this.Object["$set"]
+		if setOp == nil {
+			return
+		}
+
+		opBson, ok = setOp.(bson.M)
+		if !ok {
+			log.Println("Cannot convert $set")
+			return
+		}
 	}
 
-	setOpBson, ok := setOp.(bson.M)
-	if !ok {
-		log.Println("Cannot convert $set")
-		return
-	}
-
-	update_spec := setOpBson["update_spec"]
+	update_spec := opBson["update_spec"]
 	if update_spec == nil {
 		return
 	}
