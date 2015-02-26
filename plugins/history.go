@@ -88,7 +88,7 @@ func getHistories(session *mgo.Session, dbName string, id string, collection str
 }
 
 type history struct {
-	Id           bson.ObjectId `json:"_id"`
+	Id           bson.ObjectId `json:"_id,omitempty" bson:"_id"`
 	Organization bson.ObjectId `json:"organization"`
 	User         bson.ObjectId `json:"user"`
 	Date         time.Time     `json:"date"`
