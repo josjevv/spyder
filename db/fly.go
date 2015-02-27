@@ -21,6 +21,7 @@ type Fly struct {
 }
 
 func getId(item interface{}) (val string, err error) {
+
 	switch _id := item.(type) {
 	case string:
 		val = _id
