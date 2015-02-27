@@ -38,7 +38,7 @@ func (this *Fly) GetAppname() string {
 }
 
 func (this *Fly) GetUpdatedBy() interface{} {
-	user := this.updateSpec["updated_by"]
+	user := this.updateSpec["user"]
 	if user == nil {
 		return ""
 	}
