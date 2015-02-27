@@ -34,36 +34,30 @@ func HistoryListener(settings *config.Conf, session *mgo.Session) chan *db.Fly {
 }
 
 func historyHandler(settings *config.Conf, session *mgo.Session, fly *db.Fly) {
-	log.Printf("fly.Query = %v", fly.Query)
-
-	set := fly.Object["$set"]
-	if set != nil {
-		var setMap = set.(bson.M)
+	if fly.IsUpdate() {
+		setMap := fly.Object["$set"].(bson.M)
 		for key, value := range setMap {
 			if !utils.StringInSlice(key, _BLACKLIST) {
-				log.Printf("fly.Object['$set'][%v] = %v", key, value)
 				hist := createNewHistory(fly, key, value.(string))
 				hist.From = getHistoricValue(session, settings.MongoDb, fly.Id, key)
-
-				log.Println(hist)
 				insertHistory(session, settings.MongoDb, &hist)
 			}
 		}
 	}
-	// add history 2 db
-	log.Print("history is not implemented (yet)")
+
+	log.Print("history is not fully implemented (yet)...")
 }
 
 func getHistoricValue(session *mgo.Session, dbName string, id string, key string) string {
 	var result history
 	c := session.DB(dbName).C("shared.history")
-
-	log.Printf("entityid %v key %v ", id, key)
 	err := c.Find(bson.M{"entity": bson.ObjectIdHex(id), "key": key}).Sort("-timestamp").One(&result)
 
 	if err != nil {
-		log.Print("History for key not found : " + err.Error())
-		return ""
+		err := c.Find(bson.M{"entity": bson.ObjectIdHex(id), "operation": "i"}).One(&result)
+		if err != nil {
+			log.Printf("History for entity %v not found : %v", id, err.Error())
+		}
 	}
 	return result.Value
 }
@@ -73,7 +67,7 @@ func insertHistory(session *mgo.Session, dbName string, hist *history) {
 
 	err := c.Insert(hist)
 	if err != nil {
-		log.Println("Insert for history failed : " + err.Error())
+		log.Printf("Insert for history <%v> failed : %v", hist, err.Error())
 	}
 }
 
