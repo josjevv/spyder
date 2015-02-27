@@ -1,14 +1,14 @@
 package db
 
 import (
-	"log"
+	"errors"
 	"strings"
 
 	"gopkg.in/mgo.v2/bson"
 )
 
 type Fly struct {
-	Id           bson.ObjectId
+	Id           string
 	Timestamp    bson.MongoTimestamp "ts"
 	HistoryID    int64               "h"
 	MongoVersion int                 "v"
@@ -21,7 +21,6 @@ type Fly struct {
 
 func (this *Fly) GetOrganization() string {
 	organization := this.updateSpec["organization"]
-	log.Println(organization)
 	if organization == nil {
 		return ""
 	}
@@ -71,14 +70,28 @@ func (this *Fly) GetCollection() string {
 	return this.ParseNamespace()[1]
 }
 
-func (this *Fly) ParseId() {
+func (this *Fly) ParseEntry() (err error) {
 	// only parse inserts, deletes, and updates
+	var _id interface{}
+
 	if this.IsInsert() || this.IsDelete() || this.IsUpdate() {
 		if this.IsUpdate() {
-			this.Id = this.Query["_id"].(bson.ObjectId)
+			_id = this.Query["_id"]
 		} else {
-			this.Id = this.Object["_id"].(bson.ObjectId)
+			_id = this.Object["_id"]
 		}
+	} else {
+		return
+	}
+
+	switch _id := _id.(type) {
+	case string:
+		this.Id = _id
+	case bson.ObjectId:
+		this.Id = _id.Hex()
+	default:
+		err = errors.New("Unrecognized _id")
+		return
 	}
 
 	var opBson bson.M
@@ -89,22 +102,27 @@ func (this *Fly) ParseId() {
 	} else if this.IsUpdate() {
 		setOp := this.Object["$set"]
 		if setOp == nil {
+			err = errors.New("Cannot find $set in Update operator")
 			return
 		}
 
 		opBson, ok = setOp.(bson.M)
 		if !ok {
-			log.Println("Cannot convert $set")
+			err = errors.New("Cannot type assert $set")
 			return
 		}
+	} else if this.IsDelete() {
+		return
 	}
 
 	update_spec := opBson["update_spec"]
 	if update_spec == nil {
+		err = errors.New("Cannot find update_spec in OpLog")
 		return
 	}
 
 	this.updateSpec = update_spec.(bson.M)
+	return
 }
 
 type FlyChans []chan *Fly

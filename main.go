@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 
+	"github.com/changer/spystore"
+
 	"github.com/changer/spyder/config"
 	"github.com/changer/spyder/db"
 	"github.com/changer/spyder/plugins"
@@ -30,6 +32,8 @@ func main() {
 	if useComponent(settings, "history") {
 		chans = append(chans, plugins.HistoryListener(&settings))
 	}
+
+	spystore.InitNotifications()
 
 	db.ReadOplog(settings, session, &chans)
 

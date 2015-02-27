@@ -1,6 +1,7 @@
 package db
 
 import (
+	"log"
 	"time"
 
 	"gopkg.in/mgo.v2"
@@ -72,7 +73,12 @@ func TailOps(session *mgo.Session, channel OpChan,
 	for {
 		var entry Fly
 		for iter.Next(&entry) {
-			entry.ParseId()
+			err := entry.ParseEntry()
+
+			if err != nil {
+				log.Println(err)
+				continue
+			}
 
 			if entry.Id != "" {
 				if options.Filter == nil || options.Filter(&entry) {
