@@ -131,7 +131,7 @@ func (this *Fly) ParseEntry() (err error) {
 
 	update_spec := opBson["update_spec"]
 	if update_spec == nil {
-		err = errors.New("Cannot find update_spec in OpLog")
+		err = errors.New("Cannot find update_spec in OpLog " + this.GetCollection())
 		return
 	}
 
