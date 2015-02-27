@@ -19,13 +19,28 @@ type Fly struct {
 	updateSpec   bson.M
 }
 
+func getId(item interface{}) (val string, err error) {
+
+	switch _id := item.(type) {
+	case string:
+		val = _id
+	case bson.ObjectId:
+		val = _id.Hex()
+	default:
+		err = errors.New("Unrecognized _id")
+	}
+
+	return
+}
+
 func (this *Fly) GetOrganization() string {
 	organization := this.updateSpec["organization"]
 	if organization == nil {
 		return ""
 	}
 
-	return organization.(string)
+	val, _ := getId(organization)
+	return val
 }
 
 func (this *Fly) GetAppname() string {
@@ -34,7 +49,8 @@ func (this *Fly) GetAppname() string {
 		return ""
 	}
 
-	return app.(string)
+	val, _ := getId(app)
+	return val
 }
 
 func (this *Fly) GetUpdatedBy() interface{} {
@@ -43,7 +59,8 @@ func (this *Fly) GetUpdatedBy() interface{} {
 		return ""
 	}
 
-	return user.(string)
+	val, _ := getId(user)
+	return val
 }
 
 func (this *Fly) IsInsert() bool {
@@ -84,13 +101,9 @@ func (this *Fly) ParseEntry() (err error) {
 		return
 	}
 
-	switch _id := _id.(type) {
-	case string:
-		this.Id = _id
-	case bson.ObjectId:
-		this.Id = _id.Hex()
-	default:
-		err = errors.New("Unrecognized _id")
+	_id, err = getId(_id)
+
+	if err != nil {
 		return
 	}
 

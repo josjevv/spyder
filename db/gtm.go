@@ -80,21 +80,22 @@ func TailOps(session *mgo.Session, channel OpChan,
 				continue
 			}
 
-			if entry.Id != "" {
-				if options.Filter == nil || options.Filter(&entry) {
-					channel <- &entry
-				}
+			if options.Filter == nil || options.Filter(&entry) {
+				channel <- &entry
 			}
 
 			currTimestamp = entry.Timestamp
 		}
+
 		if err = iter.Close(); err != nil {
 			errChan <- err
 			return err
 		}
+
 		if iter.Timeout() {
 			continue
 		}
+
 		iter = GetOpLogQuery(s, currTimestamp).Tail(duration)
 	}
 

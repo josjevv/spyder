@@ -40,6 +40,7 @@ func NotificationListener(settings *config.Conf) chan *db.Fly {
 }
 
 func newNotification(settings *config.Conf, fly *db.Fly, callback flyCallback) {
+
 	organization := fly.GetOrganization()
 	app := fly.GetAppname()
 
