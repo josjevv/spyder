@@ -11,8 +11,6 @@ import (
 	utils "github.com/changer/spyder/utils"
 )
 
-var _BLACKLIST []string = []string{"__v", "date_created", "date_updated", "update_spec"}
-
 func HistoryListener(settings *config.Conf) chan *db.Fly {
 	channel := make(chan *db.Fly)
 
@@ -20,17 +18,21 @@ func HistoryListener(settings *config.Conf) chan *db.Fly {
 		log.Println("Waiting for a Fly on History")
 
 		for fly := range ch {
-			//ok, present := settings.Notifications[fly.Collection]
-			//if !present || ok {
-			//if ok {
-			go historyHandler(settings, fly)
-			//} else {
-			//	log.Printf(missingSetting, fly.Operation, fly.Database, fly.Collection, present)
-			//}
+			if !isBlacklisted(settings, "blacklistcollections", fly.GetCollection()) {
+				go historyHandler(settings, fly)
+			}
 		}
 	}(channel)
 
 	return channel
+}
+
+func isBlacklisted(settings *config.Conf, settingsKey string, key string) bool {
+	blacklist, hasBlacklist := settings.History[settingsKey]
+	if hasBlacklist {
+		return utils.StringInSlice(blacklist, key)
+	}
+	return true
 }
 
 func historyHandler(settings *config.Conf, fly *db.Fly) {
@@ -40,7 +42,7 @@ func historyHandler(settings *config.Conf, fly *db.Fly) {
 	if fly.IsUpdate() {
 		setMap := fly.Object["$set"].(bson.M)
 		for key, value := range setMap {
-			if !utils.StringInSlice(key, _BLACKLIST) {
+			if !isBlacklisted(settings, "blacklistfields", key) {
 				hist := createNewHistory(fly, key, value.(string))
 				hist.From = getHistoricValue(session, settings.MongoDb, fly.Id, key)
 				insertHistory(session, settings.MongoDb, &hist)

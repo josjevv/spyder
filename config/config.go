@@ -6,5 +6,5 @@ type Conf struct {
 	Components    map[string]bool
 	Associations  map[string][]string
 	Notifications map[string]bool
-	History       map[string]bool
+	History       map[string][]string
 }
