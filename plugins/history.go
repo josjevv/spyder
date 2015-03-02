@@ -75,8 +75,8 @@ func createNewHistory(fly *db.Fly, key string, value string) history {
 	var h = history{}
 	h.Id = bson.NewObjectId()
 	h.Entity = bson.ObjectIdHex(fly.Id)
-	h.Organization = fly.GetOrganization()
-	h.User = fly.User()
+	h.Organization = bson.ObjectIdHex(fly.GetOrganization())
+	h.User = bson.ObjectIdHex(fly.GetUser())
 	h.Timestamp = fly.Timestamp
 	h.Operation = fly.Operation
 
