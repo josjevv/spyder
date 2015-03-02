@@ -13,7 +13,7 @@ import (
 
 var _BLACKLIST []string = []string{"__v", "date_created", "date_updated", "update_spec"}
 
-func HistoryListener(settings *config.Conf, session *mgo.Session) chan *db.Fly {
+func HistoryListener(settings *config.Conf) chan *db.Fly {
 	channel := make(chan *db.Fly)
 
 	go func(ch <-chan *db.Fly) {
@@ -23,7 +23,7 @@ func HistoryListener(settings *config.Conf, session *mgo.Session) chan *db.Fly {
 			//ok, present := settings.Notifications[fly.Collection]
 			//if !present || ok {
 			//if ok {
-			go historyHandler(settings, session, fly)
+			go historyHandler(settings, fly)
 			//} else {
 			//	log.Printf(missingSetting, fly.Operation, fly.Database, fly.Collection, present)
 			//}
@@ -33,7 +33,10 @@ func HistoryListener(settings *config.Conf, session *mgo.Session) chan *db.Fly {
 	return channel
 }
 
-func historyHandler(settings *config.Conf, session *mgo.Session, fly *db.Fly) {
+func historyHandler(settings *config.Conf, fly *db.Fly) {
+	session := db.GetSession(settings.MongoHost)
+	defer session.Close()
+
 	if fly.IsUpdate() {
 		setMap := fly.Object["$set"].(bson.M)
 		for key, value := range setMap {

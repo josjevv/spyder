@@ -30,7 +30,7 @@ func main() {
 	}
 
 	if useComponent(settings, "history") {
-		chans = append(chans, plugins.HistoryListener(&settings, session))
+		chans = append(chans, plugins.HistoryListener(&settings))
 	}
 
 	spystore.InitNotifications()
