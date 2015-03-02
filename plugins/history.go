@@ -38,68 +38,101 @@ func isBlacklisted(settings *config.Conf, settingsKey string, key string) bool {
 func historyHandler(settings *config.Conf, fly *db.Fly) {
 	session := db.GetSession(settings.MongoHost)
 	defer session.Close()
+	var hist = createBasicHistory(fly)
+	var setMap bson.M
 
-	if fly.IsUpdate() {
-		setMap := fly.Object["$set"].(bson.M)
+	if !fly.IsDelete() {
+		if fly.IsInsert() {
+			attachUpdateSpec(&hist, fly)
+			setMap = fly.Object
+			hist.Doc = bson.M{}
+		} else {
+			setMap = fly.Object["$set"].(bson.M)
+		}
+
 		for key, value := range setMap {
 			if !isBlacklisted(settings, "blacklistfields", key) {
-				hist := createNewHistory(fly, key, value.(string))
-				hist.From = getHistoricValue(session, settings.MongoDb, fly.Id, key)
-				insertHistory(session, settings.MongoDb, &hist)
+				if fly.IsInsert() {
+					hist.Doc[key] = value
+				} else {
+					hist := createUpdateHistory(fly, key, value)
+					hist.From = getHistoricValue(session, settings.MongoDb, fly.Id, key)
+					insertHistory(session, settings.MongoDb, &hist)
+				}
 			}
 		}
 	}
-
-	log.Print("history is not fully implemented (yet)...")
+	if !fly.IsUpdate() {
+		// TODO - somehow we also get (from time to time) the newly added history here
+		// which is unexpected and will not be handed correctly
+		log.Println("write hist for non-update", fly.GetCollection(), fly, hist)
+		insertHistory(session, settings.MongoDb, &hist)
+	}
 }
 
-func getHistoricValue(session *mgo.Session, dbName string, id string, key string) string {
-	var result history
-	c := session.DB(dbName).C("shared.history")
-	err := c.Find(bson.M{"entity": bson.ObjectIdHex(id), "key": key}).Sort("-timestamp").One(&result)
+// TODO move all history object stuff to a separate file/class structure etc
 
-	if err != nil {
-		err := c.Find(bson.M{"entity": bson.ObjectIdHex(id), "operation": "i"}).One(&result)
-		if err != nil {
-			log.Printf("History for entity %v not found : %v", id, err.Error())
+// TODO refactor this so we also 'remember the first history record'
+// or even retrieve everything up front in one query
+func getHistoricValue(session *mgo.Session, dbName string, id string, key string) interface{} {
+	var hist history
+	var lastValue interface{}
+	c := session.DB(dbName).C("shared.history")
+	err := c.Find(bson.M{"entity": bson.ObjectIdHex(id), "operation": "u", "key": key}).Sort("-timestamp").One(&hist)
+
+	if err == nil {
+		lastValue = hist.Value
+	} else {
+		err = c.Find(bson.M{"entity": bson.ObjectIdHex(id), "operation": "i"}).One(&hist)
+		if err == nil {
+			if initialValue, present := hist.Doc[key]; present {
+				lastValue = initialValue
+			}
 		}
 	}
-	return result.Value
+	return lastValue
 }
 
 func insertHistory(session *mgo.Session, dbName string, hist *history) {
 	c := session.DB(dbName).C("shared.history")
-
 	err := c.Insert(hist)
 	if err != nil {
 		log.Printf("Insert for history <%v> failed : %v", hist, err.Error())
 	}
 }
 
-func createNewHistory(fly *db.Fly, key string, value string) history {
+func createBasicHistory(fly *db.Fly) history {
 	var h = history{}
 	h.Id = bson.NewObjectId()
 	h.Entity = bson.ObjectIdHex(fly.Id)
+	h.Operation = fly.Operation
+	return h
+}
+
+func attachUpdateSpec(h *history, fly *db.Fly) {
+	h.Timestamp = fly.Timestamp
 	h.Organization = bson.ObjectIdHex(fly.GetOrganization())
 	h.User = bson.ObjectIdHex(fly.GetUser())
-	h.Timestamp = fly.Timestamp
-	h.Operation = fly.Operation
+}
 
+func createUpdateHistory(fly *db.Fly, key string, value interface{}) history {
+	var h = createBasicHistory(fly)
+	attachUpdateSpec(&h, fly)
 	h.Key = key
 	h.Value = value
-	h.From = value
 	return h
 }
 
 //{"_id": 1, "operation": "u", "timestamp": 2PM , key: "x", "value": 2, from: 1}
 type history struct {
 	Id           bson.ObjectId       `json:"_id,omitempty" bson:"_id"`
-	Entity       bson.ObjectId       `json:"entity,omitempty"`
-	Organization bson.ObjectId       `json:"organization"`
-	User         bson.ObjectId       `json:"user"`
+	Entity       bson.ObjectId       `json:"entity"`
+	Organization bson.ObjectId       `json:"organization" bson:"organization,omitempty"`
+	User         bson.ObjectId       `json:"user" bson:"user,omitempty"`
 	Timestamp    bson.MongoTimestamp `json:"timestamp"`
 	Operation    string              `json:"operation"`
-	Key          string              `json:"key"`
-	Value        string              `json:"value"`
-	From         string              `json:"from"`
+	Key          string              `json:"key, omitempty"`
+	Value        interface{}         `json:"value, omitempty"`
+	From         interface{}         `json:"from, omitempty"`
+	Doc          bson.M              `json:"doc, omitempty"`
 }
