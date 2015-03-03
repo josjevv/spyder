@@ -3,7 +3,6 @@ package plugins
 import (
 	"log"
 
-	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
 	config "github.com/changer/spyder/config"
@@ -18,6 +17,7 @@ func HistoryListener(settings *config.Conf) chan *db.Fly {
 		log.Println("Waiting for a Fly on History")
 
 		for fly := range ch {
+			log.Println("a one day fly?")
 			if !isBlacklisted(settings, "blacklistcollections", fly.GetCollection()) {
 				go historyHandler(settings, fly)
 			}
@@ -36,8 +36,6 @@ func isBlacklisted(settings *config.Conf, settingsKey string, key string) bool {
 }
 
 func historyHandler(settings *config.Conf, fly *db.Fly) {
-	session := db.GetSession(settings.MongoHost)
-	defer session.Close()
 	var hist = createBasicHistory(fly)
 	var setMap bson.M
 
@@ -56,8 +54,8 @@ func historyHandler(settings *config.Conf, fly *db.Fly) {
 					hist.Doc[key] = value
 				} else {
 					hist := createUpdateHistory(fly, key, value)
-					hist.From = getHistoricValue(session, settings.MongoDb, fly.Id, key)
-					insertHistory(session, settings.MongoDb, &hist)
+					hist.From = getHistoricValue(settings, fly.Id, key)
+					insertHistory(settings, &hist)
 				}
 			}
 		}
@@ -65,8 +63,10 @@ func historyHandler(settings *config.Conf, fly *db.Fly) {
 	if !fly.IsUpdate() {
 		// TODO - somehow we also get (from time to time) the newly added history here
 		// which is unexpected and will not be handed correctly
-		log.Println("write hist for non-update", fly.GetCollection(), fly, hist)
-		insertHistory(session, settings.MongoDb, &hist)
+		if fly.GetCollection() == "shared.history" {
+			log.Println("yeah baby", fly.GetCollection(), fly, hist)
+		}
+		insertHistory(settings, &hist)
 	}
 }
 
@@ -74,10 +74,14 @@ func historyHandler(settings *config.Conf, fly *db.Fly) {
 
 // TODO refactor this so we also 'remember the first history record'
 // or even retrieve everything up front in one query
-func getHistoricValue(session *mgo.Session, dbName string, id string, key string) interface{} {
+func getHistoricValue(settings *config.Conf, id string, key string) interface{} {
 	var hist history
 	var lastValue interface{}
-	c := session.DB(dbName).C("shared.history")
+
+	session := db.GetSession(settings.MongoHost)
+	defer session.Close()
+
+	c := session.DB(settings.MongoDb).C("shared.history")
 	err := c.Find(bson.M{"entity": bson.ObjectIdHex(id), "operation": "u", "key": key}).Sort("-timestamp").One(&hist)
 
 	if err == nil {
@@ -93,8 +97,11 @@ func getHistoricValue(session *mgo.Session, dbName string, id string, key string
 	return lastValue
 }
 
-func insertHistory(session *mgo.Session, dbName string, hist *history) {
-	c := session.DB(dbName).C("shared.history")
+func insertHistory(settings *config.Conf, hist *history) {
+	session := db.GetSession(settings.MongoHost)
+	defer session.Close()
+
+	c := session.DB(settings.MongoDb).C("shared.history")
 	err := c.Insert(hist)
 	if err != nil {
 		log.Printf("Insert for history <%v> failed : %v", hist, err.Error())
