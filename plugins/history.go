@@ -61,11 +61,6 @@ func historyHandler(settings *config.Conf, fly *db.Fly) {
 		}
 	}
 	if !fly.IsUpdate() {
-		// TODO - somehow we also get (from time to time) the newly added history here
-		// which is unexpected and will not be handed correctly
-		if fly.GetCollection() == "shared.history" {
-			log.Println("yeah baby", fly.GetCollection(), fly, hist)
-		}
 		insertHistory(settings, &hist)
 	}
 }
