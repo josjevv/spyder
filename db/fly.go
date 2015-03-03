@@ -2,6 +2,7 @@ package db
 
 import (
 	"errors"
+	"log"
 	"strings"
 
 	"gopkg.in/mgo.v2/bson"
@@ -98,11 +99,11 @@ func (this *Fly) ParseEntry() (err error) {
 			_id = this.Object["_id"]
 		}
 	} else {
+		log.Println("Operation is neither of Insert, Update or Delete")
 		return
 	}
 
-	_id, err = getId(_id)
-
+	this.Id, err = getId(_id)
 	if err != nil {
 		return
 	}
