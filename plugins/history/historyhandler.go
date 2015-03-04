@@ -57,6 +57,11 @@ func (handler HistoryHandler) Handle(settings *config.Conf, fly *db.Fly) {
 }
 
 func (handler *HistoryHandler) insert(hist *History) {
+	if handler.Fly.GetCollection() == "shared.history" {
+		log.Println("History showing up in fly handler. How....?")
+		return
+	}
+
 	err := handler.Histories.Insert(hist)
 	if err != nil {
 		log.Printf("Insert for history <%v> failed : %v", hist, err.Error())
