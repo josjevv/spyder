@@ -22,10 +22,10 @@ type HistoryHandler struct {
 func (handler HistoryHandler) Handle(settings *config.Conf, fly *db.Fly) {
 	handler.Settings = settings
 	handler.Fly = fly
-
 	var hist = CreateBasicHistory(handler.Fly)
 	var setMap bson.M
 
+	//session and collection for handler
 	var session = db.GetSession(handler.Settings.MongoHost)
 	defer session.Close()
 	handler.Histories = session.DB(handler.Settings.MongoDb).C("shared.history")
@@ -94,5 +94,5 @@ func IsBlacklisted(settings *config.Conf, settingsKey string, key string) bool {
 	if hasBlacklist {
 		return utils.StringInSlice(blacklist, key)
 	}
-	return true
+	return false
 }
