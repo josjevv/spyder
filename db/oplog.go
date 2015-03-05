@@ -10,8 +10,7 @@ import (
 func getFilter(settings config.Conf) func(op *Fly) bool {
 	return func(op *Fly) bool {
 		return op.GetDatabase() == settings.MongoDb &&
-			useAssociation(settings, op.GetCollection()) &&
-			op.GetCollection() != "shared.history"
+			useAssociation(settings, op.GetCollection())
 	}
 }
 

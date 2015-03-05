@@ -12,4 +12,7 @@ associations:
   all: [logger, history, notifications]
 notifications:
   all: true
+history:
+  blacklistcollections: [shared.history, shared.accesses, shared.usercredentials, router.sessions]
+  blacklistfields: [__v, date_created, date_updated, update_spec]
 `
