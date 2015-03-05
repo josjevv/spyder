@@ -1,5 +1,5 @@
 box: wercker/golang
-# Build definition dummy
+# Build definition
 build:
   # The steps that will be executed on build
   steps:
