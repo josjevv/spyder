@@ -3,16 +3,15 @@ box: wercker/golang
 build:
   # The steps that will be executed on build
   steps:
-    - add-ssh-key:
-        keyname: PACKAGE_KEY
-
     # Sets the go workspace and places you package
     # at the right place in the workspace tree
     - setup-go-workspace
 
     # see http://blog.wercker.com/2013/09/23/import-go-package-from-private-git-repository.html
+    - add-ssh-key:
+        keyname: SPYSTORE_KEY
     - script:
-        name: Clone private packages
+        name: Clone spystore
         code: |-
           git clone git@github.com:changer/spystore.git $GOPATH/src/github.com/changer/spystore
 
@@ -29,3 +28,18 @@ build:
         name: go build
         code: |
           go build ./...
+
+    # Move the executables to output dir
+    - script:
+            name: move executable
+            code: mv $GOPATH/bin/spyder $WERCKER_OUTPUT_DIR
+
+deploy:
+    steps:
+        # upload spyder file to S3 using build timestamp
+        - koding/s3put@0.0.3:
+            key-id:     $S3_KEY
+            key-secret: $S3_SECRET
+            file:       spyder
+            url:        s3://$S3_BUCKET/spyder_$WERCKER_MAIN_PIPELINE_STARTED
+
