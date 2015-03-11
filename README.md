@@ -1,6 +1,40 @@
 # spyder
 Let's snoop all those data changes, shall we.
 
+## Prerequisites
+###go packages an other stuff
+* gtm (see http://go-search.org/view?id=github.com%2Frwynn%2Fgtm)
+* bazaar (bzr) needed to install gtm
+* yaml (see https://github.com/go-yaml/yaml)
+
+```shell
+go get gopkg.in/mgo.v2
+brew install bzr
+go get github.com/rwynn/gtm
+go get gopkg.in/yaml.v2
+```
+
+###enable replicaset in mongo
+* close running mongo instance if needed
+* restart mongo using right db paths etc using replSet
+
+```shell
+mongod --port 27017 --dbpath /data/db --replSet rs0
+```
+
+Connect to mongo
+```shell
+mongo
+```
+
+Initiate the replicaset and check for status
+```mongo
+rs.initiate()
+rs.status()
+```
+
+### Dev path
+
 * Pull the latest source code for API, Router & CarpetJs.
 
 * Create a Mongo Oplog reader in golang. You can use http://go-search.org/view?id=github.com%2Frwynn%2Fgtm for reference.
@@ -13,7 +47,7 @@ Let's snoop all those data changes, shall we.
 ---
 components:
  [component_type]: [boolean]
- 
+
 associations:
  <collection_name>: <component>
  <collection_name2>: [<component1>, <component2>]
@@ -50,3 +84,131 @@ type Listener interface {
 * Listener Package can have its own structure underneath. Does not matter.
 
 * Spyder should be resumable, if it resumes after a while it should know where it last left at. Maybe Spyder should have its own storage? https://github.com/HouzuoGuo/tiedot
+* 
+
+### API
+
+1. Adding a new channel to notification setting
+
+   **Method**: `POST`
+   
+  **EndPoint**: `/topic/<notification_ident>/channel/<channel_ident>`
+  
+  **Request body** :
+  ```js
+ {
+      org:"",
+      app_name: "",
+      user:"",
+      ident:""
+  }
+  ``` 
+    **Response Code**: `200`
+  
+2. Removing a channel from notification setting
+
+   **Method**: `DELETE`
+
+  **EndPoint**: `/topic/<notification_ident>/channel/<channel_ident>`
+  
+  **Request body** :
+  
+  ```js
+ {
+      org:"",
+      app_name: "",
+      user:"",
+      ident:""
+  }
+  ``` 
+  **Response Code**: `200`
+
+3. Removing  notification setting
+
+  **Method** : `DELETE`
+ 
+  **EndPoint**: `/topic/<notification_ident>`
+ 
+  **Request Body**:
+ 
+```js
+ {
+      org:"",
+      app_name: "",
+      user:"",
+      ident:""
+ }
+```
+  **Response Code**: `200`
+
+4. Get all notification settings
+
+ **Method** : `GET`
+ 
+ **EndPoint**: `/topics`
+ 
+ **Request Filteting**: `app_name` `org` `user`
+ 
+ **Response Body**:
+ 
+```js
+ [
+        {
+            "_id": "",
+            "created_on": 1425547531188,
+            "updated_on": 1425879125700,
+            "user": "",
+            "org": "",
+            "app_name": "",
+            "channels": [
+                "",
+                ""
+            ],
+            "ident": ""
+        }
+]
+```
+**Response Code**: `200`
+
+5. Get all channels
+
+ **Method** : `GET`
+ 
+ **EndPoint**: `/channels`
+ 
+ **Request Filteting**: `app_name` `org` `user`
+ 
+ **Response Body**:
+ 
+```js
+ [
+        {
+            "_id": "",
+            "created_on": 1425545240236,
+            "updated_on": 1425545240236,
+            "user": "",
+            "org": "",
+            "app_name": "",
+            "data": {
+            },
+            "ident": ""
+        }
+]
+```
+**Response Code**: `200`
+
+
+**Note**
+For all of the above request you must pass atleast one of the `org`, `app_name` and `user`.
+`ident` denotes the notification type (e.g incident_title_changed)
+
+Every response has following structure :
+
+```js
+{
+    "data": {..},
+    "message": "",
+    "status": 200
+}
+```
+
