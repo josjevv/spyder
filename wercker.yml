@@ -12,8 +12,13 @@ build:
         keyname: SPYSTORE_KEY
     - script:
         name: Clone spystore
-        code: |-
-          git clone git@github.com:changer/spystore.git $GOPATH/src/github.com/changer/spystore
+        code: >
+          if ["$WERCKER_GIT_BRANCH" == "master"] || ["$WERCKER_GIT_BRANCH" == "staging"];
+          then
+          git clone git@github.com:changer/spystore.git -b "$WERCKER_GIT_BRANCH" $GOPATH/src/github.com/changer/spystore;
+          else
+          git clone git@github.com:changer/spystore.git -b develop $GOPATH/src/github.com/changer/spystore;
+          fi;
 
     # Gets the dependencies
     - script:
