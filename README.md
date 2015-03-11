@@ -202,3 +202,13 @@ type Listener interface {
 For all of the above request you must pass atleast one of the `org`, `app_name` and `user`.
 `ident` denotes the notification type (e.g incident_title_changed)
 
+Every response has following structure :
+
+```js
+{
+    "data": {..},
+    "message": "",
+    "status": 200
+}
+```
+
