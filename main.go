@@ -16,6 +16,8 @@ func useComponent(config config.Conf, component string) bool {
 }
 
 func main() {
+	log.SetFlags(log.Ldate | log.Ltime | log.Llongfile)
+
 	log.Println("starting spyder...")
 
 	settings := config.ReadConfig()
