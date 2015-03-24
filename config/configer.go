@@ -6,23 +6,20 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-func ReadConfig() Conf {
+func ReadConfig(conf interface{}, defaultYaml string) {
 	var path string = cliArgs()
-	conf := Conf{}
-	err := yaml.Unmarshal([]byte(defaultYaml), &conf)
+	err := yaml.Unmarshal([]byte(defaultYaml), conf)
 	if err != nil {
 		panic(err)
 	}
 
 	if path != "" {
 		confData := readYaml(path)
-		err := yaml.Unmarshal(confData, &conf)
+		err := yaml.Unmarshal(confData, conf)
 		if err != nil {
 			panic(err)
 		}
 	}
-
-	return conf
 }
 
 func readYaml(path string) []byte {

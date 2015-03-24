@@ -8,29 +8,18 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-type tailOptions struct {
+type TailOptions struct {
 	After  TimestampGenerator
-	Filter OpFilter
+	Filter *bson.M
 }
 
 type OpChan chan *Fly
 
 type OpLogEntry map[string]interface{}
 
-type OpFilter func(*Fly) bool
+type OpFilter mgo.Query
 
 type TimestampGenerator func(*mgo.Session) bson.MongoTimestamp
-
-func ChainOpFilters(filters ...OpFilter) OpFilter {
-	return func(op *Fly) bool {
-		for _, filter := range filters {
-			if filter(op) == false {
-				return false
-			}
-		}
-		return true
-	}
-}
 
 func OpLogCollection(session *mgo.Session) *mgo.Collection {
 	collection := session.DB("local").C("oplog.rs")
@@ -50,39 +39,51 @@ func LastOpTimestamp(session *mgo.Session) bson.MongoTimestamp {
 	return opLog.Timestamp
 }
 
-func GetOpLogQuery(session *mgo.Session, after bson.MongoTimestamp) *mgo.Query {
+func GetOpLogQuery(session *mgo.Session, after bson.MongoTimestamp, filter *bson.M) *mgo.Query {
 	query := bson.M{"ts": bson.M{"$gt": after}}
+
+	if filter != nil {
+		for k, v := range *filter {
+			query[k] = v
+		}
+	}
+
 	collection := OpLogCollection(session)
 	return collection.Find(query).LogReplay().Sort("$natural")
 }
 
-func TailOps(session *mgo.Session, channel OpChan,
-	errChan chan error, timeout string, options *tailOptions) error {
+func tailOps(session *mgo.Session, channel OpChan,
+	errChan chan error, timeout string, options *TailOptions) error {
+
 	s := session.Copy()
 	defer s.Close()
+
 	duration, err := time.ParseDuration(timeout)
 	if err != nil {
 		errChan <- err
 		return err
 	}
+
+	//TODO: Add Logic to save & find last executed timestamp
+
 	if options.After == nil {
 		options.After = LastOpTimestamp
 	}
+
 	currTimestamp := options.After(s)
-	iter := GetOpLogQuery(s, currTimestamp).Tail(duration)
+	iter := GetOpLogQuery(s, currTimestamp, options.Filter).Tail(duration)
 	for {
 		var entry Fly
 		for iter.Next(&entry) {
 			err := entry.ParseEntry()
 
 			if err != nil {
+				errChan <- err
 				log.Println(err)
 				continue
 			}
 
-			if options.Filter == nil || options.Filter(&entry) {
-				channel <- &entry
-			}
+			channel <- &entry
 
 			currTimestamp = entry.Timestamp
 		}
@@ -96,15 +97,15 @@ func TailOps(session *mgo.Session, channel OpChan,
 			continue
 		}
 
-		iter = GetOpLogQuery(s, currTimestamp).Tail(duration)
+		iter = GetOpLogQuery(s, currTimestamp, options.Filter).Tail(duration)
 	}
 
 	return nil
 }
 
-func tail(session *mgo.Session, options *tailOptions) (OpChan, chan error) {
+func Tail(session *mgo.Session, options *TailOptions) (OpChan, chan error) {
 	outErr := make(chan error, 20)
 	outOp := make(OpChan, 20)
-	go TailOps(session, outOp, outErr, "100s", options)
+	go tailOps(session, outOp, outErr, "100s", options)
 	return outOp, outErr
 }
