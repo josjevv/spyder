@@ -48,8 +48,6 @@ func GetOpLogQuery(session *mgo.Session, after bson.MongoTimestamp, filter *bson
 		}
 	}
 
-	log.Println("Tailing Oplog with", query)
-
 	collection := OpLogCollection(session)
 	return collection.Find(query).LogReplay().Sort("$natural")
 }
@@ -80,6 +78,7 @@ func tailOps(session *mgo.Session, channel OpChan,
 			err := entry.ParseEntry()
 
 			if err != nil {
+				errChan <- err
 				log.Println(err)
 				continue
 			}
