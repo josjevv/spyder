@@ -12,7 +12,8 @@ func GetSession(connString string) *mgo.Session {
 	if err != nil {
 		panic(err)
 	}
-	log.Println("spyder connected to db")
+
+	log.Println("spyder connected to db:" + connString)
 	session.SetMode(mgo.Monotonic, true)
 	return session
 }
