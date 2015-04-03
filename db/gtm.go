@@ -19,7 +19,6 @@ type TailOptions struct {
 	Filter *bson.M
 }
 
-type OpChan chan *Fly
 type Progress struct {
 	Path  string
 	Ident []byte
@@ -45,6 +44,7 @@ func (self *Progress) commit(tx *bolt.Tx) {
 	}
 }
 
+type OpChan chan Fly
 
 type OpLogEntry map[string]interface{}
 
@@ -118,9 +118,12 @@ func tailOps(session *mgo.Session, progress *Progress, channel OpChan,
 	}
 
 	currTimestamp := options.After(s)
+
 	iter := GetOpLogQuery(s, currTimestamp, options.Filter).Tail(duration)
 	for {
-		var entry Fly
+
+		entry := Fly{}
+
 		for iter.Next(&entry) {
 			currTimestamp = entry.Timestamp
 
@@ -137,7 +140,7 @@ func tailOps(session *mgo.Session, progress *Progress, channel OpChan,
 				continue
 			}
 
-			channel <- &entry
+			channel <- entry
 
 		}
 
@@ -153,6 +156,7 @@ func tailOps(session *mgo.Session, progress *Progress, channel OpChan,
 		iter = GetOpLogQuery(s, currTimestamp, options.Filter).Tail(duration)
 	}
 
+	iter.Close()
 	return nil
 }
 
