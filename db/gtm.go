@@ -107,7 +107,7 @@ func tailOps(session *mgo.Session, progress *Progress, channel OpChan,
 
 			timestamp, err := strconv.ParseInt(string(v), BASE, 64)
 
-			if err != nil {
+			if err != nil || timestamp == 0 {
 				log.Println("Cannot convert saved timestamp", err)
 				return LastOpTimestamp(s)
 			}
