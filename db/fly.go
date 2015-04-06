@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/kr/pretty"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -116,12 +117,14 @@ func (this *Fly) ParseEntry() (err error) {
 	} else if this.IsUpdate() {
 		setOp := this.Object["$set"]
 		if setOp == nil {
+			logTrace(&this.Object)
 			err = errors.New("Cannot find $set in Update operator")
 			return
 		}
 
 		opBson, ok = setOp.(bson.M)
 		if !ok {
+			logTrace(&this.Object)
 			err = errors.New("Cannot type assert $set")
 			return
 		}
@@ -131,12 +134,17 @@ func (this *Fly) ParseEntry() (err error) {
 
 	update_spec := opBson["update_spec"]
 	if update_spec == nil {
+		logTrace(&this.Object)
 		err = errors.New("Cannot find update_spec in OpLog " + this.GetCollection())
 		return
 	}
 
 	this.updateSpec = update_spec.(bson.M)
 	return
+}
+
+func logTrace(spec *bson.M) {
+	log.Printf("%# v", pretty.Formatter(spec))
 }
 
 type FlyChans []chan *Fly
