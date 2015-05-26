@@ -145,8 +145,7 @@ func tailOps(session *mgo.Session, progress *Progress, channel OpChan,
 		}
 
 		if err = iter.Close(); err != nil {
-			log.Println(err)
-			return err
+			panic(err)
 		}
 
 		if iter.Timeout() {
