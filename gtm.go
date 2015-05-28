@@ -1,4 +1,4 @@
-package db
+package spyder
 
 import (
 	"log"
@@ -14,14 +14,13 @@ const BASE = 10
 
 var LAST_TIMESTAMP = []byte("last_timestamp")
 
+func MakeNameSpace() []string {
+	return []string{"spyder.scheduled"}
+}
+
 type TailOptions struct {
 	After  TimestampGenerator
 	Filter *bson.M
-}
-
-type Progress struct {
-	Path  string
-	Ident []byte
 }
 
 func (self *Progress) tx(db *bolt.DB) *bolt.Tx {
