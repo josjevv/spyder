@@ -2,10 +2,8 @@ package spyder
 
 import (
 	"log"
-	"time"
 
 	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 func GetSession(connString string) *mgo.Session {
@@ -24,11 +22,4 @@ func GetSession(connString string) *mgo.Session {
 type Progress struct {
 	Path  string
 	Ident []byte
-}
-
-type Scheduled struct {
-	Id      bson.ObjectId `bson:"_id"`
-	Ident   string        `bson:"ident"`
-	Expires time.Time     `bson:"expires"`
-	Data    bson.M        `bson:"data"`
 }

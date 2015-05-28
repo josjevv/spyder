@@ -15,7 +15,7 @@ const BASE = 10
 var LAST_TIMESTAMP = []byte("last_timestamp")
 
 func MakeNameSpace() []string {
-	return []string{"spyder.scheduled"}
+	return []string{}
 }
 
 type TailOptions struct {
