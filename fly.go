@@ -129,6 +129,7 @@ func (this *Fly) ParseEntry() (err error) {
 			return
 		}
 	} else if this.IsDelete() {
+		//Delete operation does not need any check.
 		return
 	}
 
