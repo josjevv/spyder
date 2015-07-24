@@ -7,13 +7,13 @@ Each update is expected to contain and 'update_spec'. That one should contain th
 
 ```json
 {
-  _id: ObjectId("5eeded5eeded5eeded5eeded"),
-  update_spec: {
-    timestamp: ISODate("2015-07-16T14:48:06.098Z"),
-    app_name: "adminapp",
-    organization: ObjectId("5eeded5eeded5eeded5eeded"),
-    user: ObjectId("5eeded5eeded5eeded5eeded")
-  },
+  "_id": ObjectId("5eeded5eeded5eeded5eeded"),
+  "update_spec": {
+    "timestamp": ISODate("2015-07-16T14:48:06.098Z"),
+    "app_name": "adminapp",
+    "organization": ObjectId("5eeded5eeded5eeded5eeded"),
+    "user": ObjectId("5eeded5eeded5eeded5eeded")
+  }
 }
 ```
 
