@@ -1,11 +1,11 @@
 # Spyder
 Let's snoop all those data changes, shall we.
-Spyder reads from the oplog and creates a channel out of that. 
+Spyder reads from the oplog and creates a channel out of that.
 
 ## Update requirements
 Each update is expected to contain and 'update_spec'. That one should contain the organization, app_name, user and timestamp.
 
-```json
+```js
 {
   _id: ObjectId("5eeded5eeded5eeded5eeded"),
   update_spec: {
