@@ -1,9 +1,16 @@
-# Spyder
-Let's snoop all those data changes, shall we.
+## Spyder
+
 Spyder reads from the oplog and creates a channel out of that.
 
+## Install
+
+```sh
+$ go get github.com/bulletind/spyder
+```
+
 ## Update requirements
-Each update is expected to contain and 'update_spec'. That one should contain the organization, app_name, user and timestamp.
+
+Each update is expected to contain and `update_spec`. That one should contain the organization, app_name, user and timestamp.
 
 ```js
 {
@@ -18,13 +25,16 @@ Each update is expected to contain and 'update_spec'. That one should contain th
 ```
 
 ## Register and read channel
+
 Services can register to spyder and filter for a collection within mongo.
-```golang
+
+```go
 spyder.FlyRegistry["actionapp.actions"] = actionapp.Handler
 ```
 
 Reading the channel can be done in this way:
-```golang
+
+```go
 func readOplog(settings *config.Config, session *mgo.Session) {
 	ops := spyder.Tail(
 		session,
@@ -44,8 +54,10 @@ func readOplog(settings *config.Config, session *mgo.Session) {
 ```
 
 ## Fly
-The channel is populated by flies.
-```golang
+
+The channel is populated by flies. Fly is basically an oplog entry.
+
+```go
 type Fly struct {
 	Id           string
 	Timestamp    bson.MongoTimestamp "ts"
@@ -59,28 +71,14 @@ type Fly struct {
 }
 ```
 
-# Contribute
 ## Enable replicaset in mongo
-* close running mongo instance if needed
-* restart mongo using right db paths etc using replSet
 
-```shell
-mongod --port 27017 --dbpath /data/db --replSet rs0
+- close running mongo instance if needed
+- restart mongo using right db paths etc using replSet
+
+```sh
+$ mongod --port 27017 --dbpath /data/db --replSet rs0
+$ mongo         # Connect to mongo
+> rs.initiate() # Initiate the replicaset
+> rs.status()   # Check for status
 ```
-
-Connect to mongo
-```shell
-mongo
-```
-
-Initiate the replicaset and check for status
-```mongo
-rs.initiate()
-rs.status()
-```
-
-### Dev path
-
-* Pull the latest source code for API, Router & CarpetJs.
-
-* Clone the Spyder repository.
