@@ -115,6 +115,7 @@ func (this *Fly) ParseEntry() (err error) {
 	if this.IsInsert() {
 		opBson = this.Object
 	} else if this.IsUpdate() {
+
 		setOp := this.Object["$set"]
 		if setOp == nil {
 			logTrace(&this.Object)
@@ -142,6 +143,27 @@ func (this *Fly) ParseEntry() (err error) {
 
 	this.updateSpec = update_spec.(bson.M)
 	return
+}
+
+func (this *Fly) PreviousState(connString string) Fly {
+	query := bson.M{
+		"o2": bson.M{
+			"_id": bson.ObjectIdHex(this.Id),
+		},
+	}
+	previous := []Fly{}
+	emptyFly := Fly{}
+	collection := GetSession(connString).DB("local").C("oplog.rs")
+	err := collection.Find(query).Sort("-ts").Limit(2).All(&previous)
+	if err != nil {
+		panic(err)
+	}
+
+	if this.IsUpdate() && len(previous) != 2 {
+		return emptyFly
+	}
+
+	return previous[1]
 }
 
 func logTrace(spec *bson.M) {
