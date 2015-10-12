@@ -145,25 +145,21 @@ func (this *Fly) ParseEntry() (err error) {
 	return
 }
 
-func (this *Fly) PreviousState(connString string) Fly {
+func (this *Fly) History(connString string) []Fly {
 	query := bson.M{
 		"o2": bson.M{
 			"_id": bson.ObjectIdHex(this.Id),
 		},
 	}
-	previous := []Fly{}
-	emptyFly := Fly{}
+
+	history := []Fly{}
 	collection := GetSession(connString).DB("local").C("oplog.rs")
-	err := collection.Find(query).Sort("-ts").Limit(2).All(&previous)
+	err := collection.Find(query).Sort("-ts").All(&history)
 	if err != nil {
 		panic(err)
 	}
 
-	if this.IsUpdate() && len(previous) != 2 {
-		return emptyFly
-	}
-
-	return previous[1]
+	return history
 }
 
 func logTrace(spec *bson.M) {
