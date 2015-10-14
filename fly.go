@@ -145,11 +145,17 @@ func (this *Fly) ParseEntry() (err error) {
 	return
 }
 
-func (this *Fly) History(connString string) []Fly {
-	query := bson.M{
-		"o2": bson.M{
-			"_id": bson.ObjectIdHex(this.Id),
-		},
+func (this *Fly) History(connString string, initial bool) []Fly {
+	entity := bson.ObjectIdHex(this.Id)
+	query := bson.M{}
+	query["o2"] = bson.M{
+		"_id": entity,
+	}
+
+	// query the insert
+	if initial {
+		delete(query, "o2")
+		query["o._id"] = entity
 	}
 
 	history := []Fly{}
