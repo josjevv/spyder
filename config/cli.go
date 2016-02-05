@@ -2,7 +2,7 @@ package config
 
 import (
 	"flag"
-	"log"
+	"github.com/bulletind/spyder/log"
 )
 
 func cliArgs() string {
@@ -15,7 +15,7 @@ func cliArgs() string {
 	flag.Parse()
 
 	if *config == "" {
-		log.Println("No config file supplied. Using defauls.")
+		log.Info("No config file supplied. Using defauls.")
 	}
 
 	return *config
