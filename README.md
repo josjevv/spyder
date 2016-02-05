@@ -53,6 +53,10 @@ func readOplog(settings *config.Config, session *mgo.Session) {
 }
 ```
 
+## Logging 
+Logging is done using logrus: [https://github.com/Sirupsen/logrus](https://github.com/Sirupsen/logrus).
+Use log.Setup to make it log debug statements and/or notify sentry using your SentryDSN. 
+
 ## Fly
 
 The channel is populated by flies. Fly is basically an oplog entry.

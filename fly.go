@@ -2,7 +2,7 @@ package spyder
 
 import (
 	"errors"
-	"log"
+	"github.com/bulletind/spyder/log"
 	"strings"
 
 	"github.com/kr/pretty"
@@ -89,7 +89,7 @@ func (this *Fly) GetCollection() string {
 	return this.ParseNamespace()[1]
 }
 
-func (this *Fly) ParseEntry() (err error) {
+func (this *Fly) ParseEntry(ignoreCollections bson.M) (err error, ignore bool) {
 	// only parse inserts, deletes, and updates
 	var _id interface{}
 
@@ -100,7 +100,7 @@ func (this *Fly) ParseEntry() (err error) {
 			_id = this.Object["_id"]
 		}
 	} else {
-		log.Println("Operation is neither of Insert, Update or Delete")
+		log.Info("Operation is neither of Insert, Update or Delete")
 		return
 	}
 
@@ -136,13 +136,18 @@ func (this *Fly) ParseEntry() (err error) {
 
 	update_spec := opBson["update_spec"]
 	if update_spec == nil {
-		logTrace(&this.Object)
-		err = errors.New("Cannot find update_spec in OpLog " + this.GetCollection())
-		return
+		coll := ignoreCollections[this.GetCollection()]
+		if coll == nil {
+			logTrace(&this.Object)
+			err = errors.New("Cannot find update_spec in OpLog " + this.GetCollection())
+			return err, true
+		} else {
+			return err, false
+		}
 	}
 
 	this.updateSpec = update_spec.(bson.M)
-	return
+	return err, false
 }
 
 func (this *Fly) History(connString string, initial bool) []Fly {
@@ -169,7 +174,7 @@ func (this *Fly) History(connString string, initial bool) []Fly {
 }
 
 func logTrace(spec *bson.M) {
-	log.Printf("%# v", pretty.Formatter(spec))
+	log.Info("%# v", pretty.Formatter(spec))
 }
 
 type FlyChans []chan *Fly

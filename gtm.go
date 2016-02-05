@@ -1,7 +1,7 @@
 package spyder
 
 import (
-	"log"
+	"github.com/bulletind/spyder/log"
 	"strconv"
 	"time"
 
@@ -19,14 +19,15 @@ func MakeNameSpace() []string {
 }
 
 type TailOptions struct {
-	After  TimestampGenerator
-	Filter *bson.M
+	After             TimestampGenerator
+	Filter            *bson.M
+	IgnoreCollections bson.M
 }
 
 func (self *Progress) tx(db *bolt.DB) *bolt.Tx {
 	tx, err := db.Begin(true)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 		return nil
 	}
 
@@ -35,10 +36,10 @@ func (self *Progress) tx(db *bolt.DB) *bolt.Tx {
 
 func (self *Progress) commit(tx *bolt.Tx) {
 	// Commit the transaction and check for error.
-	log.Println("Committing the changes")
+	log.Debug("Committing the changes")
 
 	if err := tx.Commit(); err != nil {
-		log.Println("Rolling back transaction", err)
+		log.Error("Rolling back transaction", err)
 		tx.Rollback()
 	}
 }
@@ -107,11 +108,11 @@ func tailOps(session *mgo.Session, progress *Progress, channel OpChan,
 			timestamp, err := strconv.ParseInt(string(v), BASE, 64)
 
 			if err != nil || timestamp == 0 {
-				log.Println("Cannot convert saved timestamp", err)
+				log.Error("Cannot convert saved timestamp", err)
 				return LastOpTimestamp(s)
 			}
 
-			log.Println("Restored Last Timestamp", timestamp)
+			log.Debug("Restored Last Timestamp", timestamp)
 			return bson.MongoTimestamp(timestamp)
 		}
 	}
@@ -126,21 +127,22 @@ func tailOps(session *mgo.Session, progress *Progress, channel OpChan,
 		for iter.Next(&entry) {
 			currTimestamp = entry.Timestamp
 
-			log.Println("Saving Current Timestamp", currTimestamp)
+			log.Debug("Saving Current Timestamp", currTimestamp)
 			tx := progress.tx(stateDB)
 			bucket := tx.Bucket(LAST_TIMESTAMP)
 			bucket.Put(progress.Ident, []byte(strconv.FormatInt(int64(currTimestamp), BASE)))
 			progress.commit(tx)
 
-			err := entry.ParseEntry()
+			err, ignore := entry.ParseEntry(options.IgnoreCollections)
 
 			if err != nil {
-				log.Println(err)
+				log.Error(err)
 				continue
 			}
 
-			channel <- entry
-
+			if !ignore {
+				channel <- entry
+			}
 		}
 
 		if err = iter.Close(); err != nil {
