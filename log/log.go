@@ -37,6 +37,11 @@ func Setup(debug bool, sentryDSN string) {
 	}
 }
 
+func SetupWithExisting(existingLogger *logrus.Logger) {
+	logger = existingLogger
+}
+
+
 // Debug logs a message at level Debug on the standard logger.
 func Debug(args ...interface{}) {
 	if logger.Level >= logrus.DebugLevel {
