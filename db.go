@@ -23,12 +23,16 @@ func GetSession(connString string) *mgo.Session {
 	}
 
 	dialInfo, err := mgo.ParseURL(connString)
+	if err != nil {
+		panic(err)
+	}
+
+	dialInfo.Timeout = 10 * time.Second
 
 	if useSsl {
 		config := tls.Config{}
 		config.InsecureSkipVerify = true
 
-		dialInfo.Timeout = 10 * time.Second
 		dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
 			return tls.Dial("tcp", addr.String(), &config)
 		}
