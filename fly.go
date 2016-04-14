@@ -2,7 +2,7 @@ package spyder
 
 import (
 	"errors"
-	"github.com/bulletind/spyder/log"
+	"log"
 	"strings"
 
 	"github.com/kr/pretty"
@@ -100,7 +100,7 @@ func (this *Fly) ParseEntry(ignoreCollections bson.M) (err error, ignore bool) {
 			_id = this.Object["_id"]
 		}
 	} else {
-		log.Info("Operation is neither of Insert, Update or Delete")
+		log.Print("Operation is neither of Insert, Update or Delete")
 		return
 	}
 
@@ -174,7 +174,7 @@ func (this *Fly) History(connString string, initial bool) []Fly {
 }
 
 func logTrace(spec *bson.M) {
-	log.Info("%# v", pretty.Formatter(spec))
+	log.Printf("%# v", pretty.Formatter(spec))
 }
 
 type FlyChans []chan *Fly
